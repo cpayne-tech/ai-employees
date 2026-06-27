@@ -1,0 +1,2 @@
+-- Intentionally empty.
+-- AI Employees is a generic platform; create client/business records through the app.
