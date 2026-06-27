@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { logoutAiEmployeesAction } from "@/ai-employees/auth-actions";
 
 export function AppFrame({ children }: { children: ReactNode }) {
   return (
@@ -16,6 +17,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <Link href="/ai-employees/new" className="button">
             New AI Employee
           </Link>
+          <form action={logoutAiEmployeesAction}>
+            <button className="button ghost" type="submit">
+              Sign out
+            </button>
+          </form>
         </nav>
       </header>
       <main className="page">{children}</main>

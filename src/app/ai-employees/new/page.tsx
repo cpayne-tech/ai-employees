@@ -1,8 +1,11 @@
 import { createAiEmployeeAction } from "@/ai-employees/actions";
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { EmployeeForm } from "@/ai-employees/components/employee-form";
 
-export default function NewAiEmployeePage() {
+export default async function NewAiEmployeePage() {
+  await requireAiEmployeesAccess();
+
   return (
     <AppFrame>
       <div className="page-header">

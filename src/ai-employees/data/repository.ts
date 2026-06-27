@@ -76,11 +76,9 @@ export async function listAiEmployees(): Promise<AiEmployeeSummary[]> {
   const supabase = getSupabaseAdminClient();
 
   if (supabase) {
-    const { data, error } = await supabase
+    const { data: employees, error } = await supabase
       .from("ai_employees")
-      .select(
-        "*, ai_employee_conversations(id, updated_at), ai_employee_leads(id), ai_employee_appointments(id), ai_employee_escalations(id)"
-      )
+      .select("*")
       .eq("owner_id", ownerId())
       .order("created_at", { ascending: false });
 
@@ -88,13 +86,55 @@ export async function listAiEmployees(): Promise<AiEmployeeSummary[]> {
       throw new Error(error.message);
     }
 
-    return (data ?? []).map((row) =>
+    const normalizedEmployees = (employees ?? []).map(normalizeEmployee);
+    const employeeIds = normalizedEmployees.map((employee) => employee.id);
+
+    if (!employeeIds.length) {
+      return [];
+    }
+
+    const [
+      { data: conversations, error: conversationsError },
+      { data: leads, error: leadsError },
+      { data: appointments, error: appointmentsError },
+      { data: escalations, error: escalationsError }
+    ] = await Promise.all([
+      supabase
+        .from("ai_employee_conversations")
+        .select("*")
+        .in("ai_employee_id", employeeIds)
+        .eq("owner_id", ownerId()),
+      supabase
+        .from("ai_employee_leads")
+        .select("*")
+        .in("ai_employee_id", employeeIds)
+        .eq("owner_id", ownerId()),
+      supabase
+        .from("ai_employee_appointments")
+        .select("*")
+        .in("ai_employee_id", employeeIds)
+        .eq("owner_id", ownerId()),
+      supabase
+        .from("ai_employee_escalations")
+        .select("*")
+        .in("ai_employee_id", employeeIds)
+        .eq("owner_id", ownerId())
+    ]);
+
+    const relatedError =
+      conversationsError ?? leadsError ?? appointmentsError ?? escalationsError;
+
+    if (relatedError) {
+      throw new Error(relatedError.message);
+    }
+
+    return normalizedEmployees.map((employee) =>
       summarizeEmployee(
-        normalizeEmployee(row),
-        (row.ai_employee_conversations ?? []) as AiEmployeeConversation[],
-        (row.ai_employee_leads ?? []) as AiEmployeeLead[],
-        (row.ai_employee_appointments ?? []) as AiEmployeeAppointment[],
-        (row.ai_employee_escalations ?? []) as AiEmployeeEscalation[]
+        employee,
+        (conversations ?? []) as AiEmployeeConversation[],
+        (leads ?? []) as AiEmployeeLead[],
+        (appointments ?? []) as AiEmployeeAppointment[],
+        (escalations ?? []) as AiEmployeeEscalation[]
       )
     );
   }
@@ -139,21 +179,25 @@ export async function getAiEmployeeDetail(
         .from("ai_employee_conversations")
         .select("*")
         .eq("ai_employee_id", id)
+        .eq("owner_id", ownerId())
         .order("updated_at", { ascending: false }),
       supabase
         .from("ai_employee_leads")
         .select("*")
         .eq("ai_employee_id", id)
+        .eq("owner_id", ownerId())
         .order("created_at", { ascending: false }),
       supabase
         .from("ai_employee_appointments")
         .select("*")
         .eq("ai_employee_id", id)
+        .eq("owner_id", ownerId())
         .order("created_at", { ascending: false }),
       supabase
         .from("ai_employee_escalations")
         .select("*")
         .eq("ai_employee_id", id)
+        .eq("owner_id", ownerId())
         .order("created_at", { ascending: false })
     ]);
 
@@ -350,6 +394,7 @@ export async function saveExtractedLead(input: {
       .from("ai_employee_leads")
       .select("id, created_at")
       .eq("conversation_id", input.conversationId)
+      .eq("owner_id", ownerId())
       .maybeSingle();
 
     const { data, error } = await supabase
@@ -407,6 +452,7 @@ export async function createAppointmentRequest(input: {
       .from("ai_employee_appointments")
       .select("id, created_at")
       .eq("conversation_id", input.conversationId)
+      .eq("owner_id", ownerId())
       .maybeSingle();
 
     const { data, error } = await supabase
@@ -464,6 +510,7 @@ export async function createEscalation(input: {
       .from("ai_employee_escalations")
       .select("id, created_at")
       .eq("conversation_id", input.conversationId)
+      .eq("owner_id", ownerId())
       .maybeSingle();
 
     const { data, error } = await supabase

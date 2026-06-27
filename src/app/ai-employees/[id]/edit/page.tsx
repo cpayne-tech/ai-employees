@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { updateAiEmployeeAction } from "@/ai-employees/actions";
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { EmployeeForm } from "@/ai-employees/components/employee-form";
 import { getAiEmployeeDetail } from "@/ai-employees/data/repository";
@@ -9,6 +10,7 @@ export default async function EditAiEmployeePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAiEmployeesAccess();
   const { id } = await params;
   const detail = await getAiEmployeeDetail(id);
 

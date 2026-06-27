@@ -129,6 +129,10 @@ h3 {
   gap: 10px;
 }
 
+.button-row form {
+  margin: 0;
+}
+
 .button {
   align-items: center;
   background: var(--brand);
@@ -396,6 +400,26 @@ textarea {
   border-radius: 8px;
   color: var(--danger);
   padding: 12px;
+}
+
+.login-shell {
+  align-items: center;
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 460px;
+  padding: 28px;
+  width: 100%;
 }
 
 @media (max-width: 860px) {

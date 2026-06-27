@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { ConversationTester } from "@/ai-employees/components/conversation-tester";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
@@ -10,6 +11,7 @@ export default async function AiEmployeeProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAiEmployeesAccess();
   const { id } = await params;
   const detail = await getAiEmployeeDetail(id);
 

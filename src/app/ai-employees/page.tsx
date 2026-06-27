@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { listAiEmployees } from "@/ai-employees/data/repository";
 
 export default async function AiEmployeesPage() {
+  await requireAiEmployeesAccess();
   const employees = await listAiEmployees();
   const totals = employees.reduce(
     (summary, employee) => ({

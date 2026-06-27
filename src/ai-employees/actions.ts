@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { assertAiEmployeesAccess } from "@/ai-employees/auth";
 import {
   createAiEmployee,
   createAppointmentRequest,
@@ -47,12 +48,14 @@ export type TesterActionState = {
 };
 
 export async function createAiEmployeeAction(formData: FormData) {
+  await assertAiEmployeesAccess();
   const employee = await createAiEmployee(parseEmployeeForm(formData));
   revalidatePath("/ai-employees");
   redirect(`/ai-employees/${employee.id}`);
 }
 
 export async function updateAiEmployeeAction(id: string, formData: FormData) {
+  await assertAiEmployeesAccess();
   const employee = await updateAiEmployee(id, parseEmployeeForm(formData));
   revalidatePath("/ai-employees");
   revalidatePath(`/ai-employees/${id}`);
@@ -63,6 +66,7 @@ export async function sendTestMessageAction(
   previousState: TesterActionState,
   formData: FormData
 ): Promise<TesterActionState> {
+  await assertAiEmployeesAccess();
   const employeeId = String(formData.get("employeeId") ?? "");
   const visitorMessage = String(formData.get("message") ?? "").trim();
 
