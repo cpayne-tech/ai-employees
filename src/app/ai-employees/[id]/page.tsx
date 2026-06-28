@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  activateAiEmployeeAction,
+  archiveAiEmployeeAction,
+  pauseAiEmployeeAction
+} from "@/ai-employees/actions";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
-import { ConversationTester } from "@/ai-employees/components/conversation-tester";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { getAiEmployeeDetail } from "@/ai-employees/data/repository";
 
@@ -34,9 +38,23 @@ export default async function AiEmployeeProfilePage({
           <Link href={`/ai-employees/${employee.id}/edit`} className="button secondary">
             Edit settings
           </Link>
-          <a href="#test-employee" className="button">
+          <Link href={`/ai-employees/${employee.id}/test`} className="button">
             Test employee
-          </a>
+          </Link>
+          {employee.status === "active" ? (
+            <form action={pauseAiEmployeeAction.bind(null, employee.id)}>
+              <button className="button secondary" type="submit">Pause</button>
+            </form>
+          ) : (
+            <form action={activateAiEmployeeAction.bind(null, employee.id)}>
+              <button className="button secondary" type="submit">Activate</button>
+            </form>
+          )}
+          <form action={archiveAiEmployeeAction.bind(null, employee.id)}>
+            <button className="button danger" type="submit">
+              {employee.name === "OBMC Website Concierge" ? "Archive test employee" : "Archive"}
+            </button>
+          </form>
         </div>
       </div>
 
@@ -47,8 +65,18 @@ export default async function AiEmployeeProfilePage({
         <Stat label="Escalations" value={employee.total_escalations} />
       </section>
 
-      <div className="grid content-grid" style={{ marginTop: 18 }}>
-        <div className="grid">
+      <div className="grid" style={{ marginTop: 18 }}>
+        <section className="card">
+          <h2>Overview</h2>
+          <div className="detail-list">
+            <Detail label="Business" value={employee.business_name} />
+            <Detail label="Primary goal" value={employee.primary_goal} />
+            <Detail label="Last active" value={employee.last_active_at ? new Date(employee.last_active_at).toLocaleString() : "No activity"} />
+            <Detail label="Status" value={employee.status} />
+          </div>
+        </section>
+
+        <div className="grid two-column-grid">
           <section className="card">
             <h2>Configuration</h2>
             <div className="detail-list">
@@ -64,9 +92,27 @@ export default async function AiEmployeeProfilePage({
               <Detail label="Required fields" value={employee.required_lead_fields.join(", ")} />
               <Detail label="Escalation email" value={employee.escalation_email} />
               <Detail label="Escalation phone" value={employee.escalation_phone} />
+              <Detail label="Tone" value={employee.tone} />
+              <Detail label="FAQs" value={employee.faqs} />
+              <Detail label="Rules" value={employee.disqualifying_rules} />
+              <Detail label="Appointment instructions" value={employee.appointment_instructions} />
             </div>
           </section>
 
+          <section className="card">
+            <h2>GoHighLevel Integration - Coming Next</h2>
+            <p className="muted">Not connected. These saved fields are placeholders for Part 3.</p>
+            <div className="detail-list">
+              <Detail label="Location ID" value={employee.ghl_location_id} />
+              <Detail label="Calendar ID" value={employee.ghl_calendar_id} />
+              <Detail label="Pipeline ID" value={employee.ghl_pipeline_id} />
+              <Detail label="Stage ID" value={employee.ghl_opportunity_stage_id} />
+              <Detail label="Source name" value={employee.ghl_source_name} />
+            </div>
+          </section>
+        </div>
+
+        <div className="grid">
           <Records title="Conversations" empty="No conversations yet." rows={detail.conversations.map((item) => [
             item.status,
             item.visitor_name ?? "Unknown visitor",
@@ -88,10 +134,6 @@ export default async function AiEmployeeProfilePage({
             item.status,
             new Date(item.created_at).toLocaleString()
           ])} />
-        </div>
-
-        <div id="test-employee">
-          <ConversationTester employee={employee} />
         </div>
       </div>
     </AppFrame>

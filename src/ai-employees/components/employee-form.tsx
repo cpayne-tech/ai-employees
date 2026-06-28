@@ -1,6 +1,15 @@
 import Link from "next/link";
-import type { AiEmployee } from "@/ai-employees/types";
+import type { AiEmployee, AiEmployeeStatus, AiEmployeeType } from "@/ai-employees/types";
 import { SubmitButton } from "@/ai-employees/components/submit-button";
+
+const employeeTypes: AiEmployeeType[] = [
+  "AI Receptionist / Appointment Setter",
+  "AI Website Concierge",
+  "AI Lead Qualifier",
+  "AI Customer Support Agent"
+];
+
+const statuses: AiEmployeeStatus[] = ["draft", "active", "paused", "archived"];
 
 type EmployeeFormProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -20,15 +29,17 @@ export function EmployeeForm({
         <div className="field">
           <label htmlFor="type">Employee type</label>
           <select id="type" name="type" defaultValue={employee?.type ?? "AI Receptionist / Appointment Setter"}>
-            <option>AI Receptionist / Appointment Setter</option>
+            {employeeTypes.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
           </select>
         </div>
         <div className="field">
           <label htmlFor="status">Status</label>
           <select id="status" name="status" defaultValue={employee?.status ?? "draft"}>
-            <option value="draft">draft</option>
-            <option value="active">active</option>
-            <option value="paused">paused</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
           </select>
         </div>
         <Field name="business_name" label="Business name" defaultValue={employee?.business_name ?? ""} />
@@ -58,6 +69,24 @@ export function EmployeeForm({
         />
         <Textarea name="primary_goal" label="Primary goal" defaultValue={employee?.primary_goal ?? ""} />
       </div>
+
+      <section className="form-section">
+        <div>
+          <h2>GoHighLevel Integration - Coming Next</h2>
+          <p className="muted">These fields are saved for future integration and are not active yet.</p>
+        </div>
+        <div className="form-grid">
+          <Field name="ghl_location_id" label="GHL location ID" defaultValue={employee?.ghl_location_id ?? ""} />
+          <Field name="ghl_calendar_id" label="GHL calendar ID" defaultValue={employee?.ghl_calendar_id ?? ""} />
+          <Field name="ghl_pipeline_id" label="GHL pipeline ID" defaultValue={employee?.ghl_pipeline_id ?? ""} />
+          <Field
+            name="ghl_opportunity_stage_id"
+            label="GHL opportunity stage ID"
+            defaultValue={employee?.ghl_opportunity_stage_id ?? ""}
+          />
+          <Field name="ghl_source_name" label="GHL source name" defaultValue={employee?.ghl_source_name ?? ""} />
+        </div>
+      </section>
       <div className="button-row" style={{ marginTop: 18 }}>
         <SubmitButton label={submitLabel} />
         <Link href={employee ? `/ai-employees/${employee.id}` : "/ai-employees"} className="button secondary">

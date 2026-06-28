@@ -20,6 +20,13 @@ export type AiEmployeeInput = Omit<
   "id" | "owner_id" | "created_at" | "updated_at"
 >;
 
+export type AiEmployeeFilters = {
+  status?: string;
+  type?: string;
+  search?: string;
+  includeArchived?: boolean;
+};
+
 const ownerId = () => process.env.AI_EMPLOYEES_OWNER_ID ?? demoOwnerId;
 
 function now() {
@@ -67,20 +74,76 @@ function parseRequiredFields(value: unknown): string[] {
 function normalizeEmployee(row: Record<string, unknown>): AiEmployee {
   return {
     ...(row as unknown as AiEmployee),
-    required_lead_fields: parseRequiredFields(row.required_lead_fields)
+    required_lead_fields: parseRequiredFields(row.required_lead_fields),
+    ghl_location_id: String(row.ghl_location_id ?? ""),
+    ghl_calendar_id: String(row.ghl_calendar_id ?? ""),
+    ghl_pipeline_id: String(row.ghl_pipeline_id ?? ""),
+    ghl_opportunity_stage_id: String(row.ghl_opportunity_stage_id ?? ""),
+    ghl_source_name: String(row.ghl_source_name ?? "")
   };
 }
 
-export async function listAiEmployees(): Promise<AiEmployeeSummary[]> {
+function filterEmployeeSummaries(
+  employees: AiEmployeeSummary[],
+  filters: AiEmployeeFilters = {}
+) {
+  const search = filters.search?.trim().toLowerCase();
+
+  return employees.filter((employee) => {
+    if (!filters.includeArchived && employee.status === "archived") {
+      return false;
+    }
+
+    if (filters.status && filters.status !== "all" && employee.status !== filters.status) {
+      return false;
+    }
+
+    if (filters.type && filters.type !== "all" && employee.type !== filters.type) {
+      return false;
+    }
+
+    if (search) {
+      const haystack = `${employee.name} ${employee.business_name}`.toLowerCase();
+      if (!haystack.includes(search)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
+export async function listAiEmployees(
+  filters: AiEmployeeFilters = {}
+): Promise<AiEmployeeSummary[]> {
   noStore();
   const supabase = getSupabaseAdminClient();
 
   if (supabase) {
-    const { data: employees, error } = await supabase
+    let query = supabase
       .from("ai_employees")
       .select("*")
       .eq("owner_id", ownerId())
       .order("created_at", { ascending: false });
+
+    if (!filters.includeArchived && filters.status !== "archived") {
+      query = query.neq("status", "archived");
+    }
+
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+
+    if (filters.type && filters.type !== "all") {
+      query = query.eq("type", filters.type);
+    }
+
+    if (filters.search?.trim()) {
+      const search = filters.search.trim().replaceAll("%", "");
+      query = query.or(`name.ilike.%${search}%,business_name.ilike.%${search}%`);
+    }
+
+    const { data: employees, error } = await query;
 
     if (error) {
       throw new Error(error.message);
@@ -140,14 +203,17 @@ export async function listAiEmployees(): Promise<AiEmployeeSummary[]> {
   }
 
   const store = await readDevStore();
-  return store.employees.map((employee) =>
-    summarizeEmployee(
-      employee,
-      store.conversations,
-      store.leads,
-      store.appointments,
-      store.escalations
-    )
+  return filterEmployeeSummaries(
+    store.employees.map((employee) =>
+      summarizeEmployee(
+        normalizeEmployee(employee as unknown as Record<string, unknown>),
+        store.conversations,
+        store.leads,
+        store.appointments,
+        store.escalations
+      )
+    ),
+    filters
   );
 }
 
@@ -308,6 +374,41 @@ export async function updateAiEmployee(id: string, input: AiEmployeeInput) {
   return store.employees[index];
 }
 
+export async function updateAiEmployeeStatus(
+  id: string,
+  status: AiEmployee["status"]
+) {
+  const supabase = getSupabaseAdminClient();
+  const update = { status, updated_at: now() };
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("ai_employees")
+      .update(update)
+      .eq("id", id)
+      .eq("owner_id", ownerId())
+      .select("*")
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return normalizeEmployee(data);
+  }
+
+  const store = await readDevStore();
+  const index = store.employees.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    throw new Error("AI employee not found.");
+  }
+
+  store.employees[index] = { ...store.employees[index], ...update };
+  await writeDevStore(store);
+  return normalizeEmployee(store.employees[index] as unknown as Record<string, unknown>);
+}
+
 export async function saveTestConversation(input: {
   employee: AiEmployee;
   conversationId?: string;
@@ -380,7 +481,7 @@ export async function saveExtractedLead(input: {
     name: input.lead.name ?? null,
     email: input.lead.email ?? null,
     phone: input.lead.phone ?? null,
-    service_needed: input.lead.service_needed ?? input.lead.coverage_goal ?? null,
+    service_needed: input.lead.service_needed ?? null,
     preferred_time: input.lead.preferred_time ?? null,
     status: input.lead.qualified ? "qualified" : "captured",
     source: "test",
@@ -552,4 +653,320 @@ function summarizeTranscript(transcript: TranscriptMessage[]) {
   }
 
   return visitorMessages.slice(0, 220);
+}
+
+export async function listLeads(filters: {
+  employeeId?: string;
+  status?: string;
+  source?: string;
+} = {}) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    let query = supabase
+      .from("ai_employee_leads")
+      .select("*, ai_employees(name, business_name)")
+      .eq("owner_id", ownerId())
+      .order("created_at", { ascending: false });
+
+    if (filters.employeeId && filters.employeeId !== "all") {
+      query = query.eq("ai_employee_id", filters.employeeId);
+    }
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+    if (filters.source && filters.source !== "all") {
+      query = query.eq("source", filters.source);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data ?? []) as Array<AiEmployeeLead & { ai_employees?: { name?: string; business_name?: string } }>;
+  }
+
+  const store = await readDevStore();
+  return store.leads
+    .filter((lead) => !filters.employeeId || filters.employeeId === "all" || lead.ai_employee_id === filters.employeeId)
+    .filter((lead) => !filters.status || filters.status === "all" || lead.status === filters.status)
+    .filter((lead) => !filters.source || filters.source === "all" || lead.source === filters.source)
+    .map((lead) => ({
+      ...lead,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === lead.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === lead.ai_employee_id)?.business_name
+      }
+    }));
+}
+
+export async function getLeadDetail(id: string) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    const { data: lead, error } = await supabase
+      .from("ai_employee_leads")
+      .select("*, ai_employees(name, business_name)")
+      .eq("id", id)
+      .eq("owner_id", ownerId())
+      .single();
+
+    if (error || !lead) {
+      return null;
+    }
+
+    const [{ data: conversation }, { data: appointment }, { data: escalation }] = await Promise.all([
+      supabase
+        .from("ai_employee_conversations")
+        .select("*")
+        .eq("id", (lead as AiEmployeeLead).conversation_id)
+        .eq("owner_id", ownerId())
+        .maybeSingle(),
+      supabase
+        .from("ai_employee_appointments")
+        .select("*")
+        .eq("lead_id", id)
+        .eq("owner_id", ownerId())
+        .maybeSingle(),
+      supabase
+        .from("ai_employee_escalations")
+        .select("*")
+        .eq("lead_id", id)
+        .eq("owner_id", ownerId())
+        .maybeSingle()
+    ]);
+
+    return {
+      lead: lead as AiEmployeeLead & { ai_employees?: { name?: string; business_name?: string } },
+      conversation: conversation as AiEmployeeConversation | null,
+      appointment: appointment as AiEmployeeAppointment | null,
+      escalation: escalation as AiEmployeeEscalation | null
+    };
+  }
+
+  const store = await readDevStore();
+  const lead = store.leads.find((item) => item.id === id);
+  if (!lead) {
+    return null;
+  }
+
+  return {
+    lead: {
+      ...lead,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === lead.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === lead.ai_employee_id)?.business_name
+      }
+    },
+    conversation: store.conversations.find((item) => item.id === lead.conversation_id) ?? null,
+    appointment: store.appointments.find((item) => item.lead_id === id) ?? null,
+    escalation: store.escalations.find((item) => item.lead_id === id) ?? null
+  };
+}
+
+export async function listConversations(filters: {
+  employeeId?: string;
+  mode?: string;
+  status?: string;
+} = {}) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    let query = supabase
+      .from("ai_employee_conversations")
+      .select("*, ai_employees(name, business_name)")
+      .eq("owner_id", ownerId())
+      .order("created_at", { ascending: false });
+
+    if (filters.employeeId && filters.employeeId !== "all") {
+      query = query.eq("ai_employee_id", filters.employeeId);
+    }
+    if (filters.mode && filters.mode !== "all") {
+      query = query.eq("mode", filters.mode);
+    }
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data ?? []) as Array<AiEmployeeConversation & { ai_employees?: { name?: string; business_name?: string } }>;
+  }
+
+  const store = await readDevStore();
+  return store.conversations
+    .filter((item) => !filters.employeeId || filters.employeeId === "all" || item.ai_employee_id === filters.employeeId)
+    .filter((item) => !filters.mode || filters.mode === "all" || item.mode === filters.mode)
+    .filter((item) => !filters.status || filters.status === "all" || item.status === filters.status)
+    .map((conversation) => ({
+      ...conversation,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === conversation.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === conversation.ai_employee_id)?.business_name
+      }
+    }));
+}
+
+export async function getConversationDetail(id: string) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    const { data: conversation, error } = await supabase
+      .from("ai_employee_conversations")
+      .select("*, ai_employees(name, business_name)")
+      .eq("id", id)
+      .eq("owner_id", ownerId())
+      .single();
+
+    if (error || !conversation) {
+      return null;
+    }
+
+    const [{ data: lead }, { data: appointment }, { data: escalation }] = await Promise.all([
+      supabase
+        .from("ai_employee_leads")
+        .select("*")
+        .eq("conversation_id", id)
+        .eq("owner_id", ownerId())
+        .maybeSingle(),
+      supabase
+        .from("ai_employee_appointments")
+        .select("*")
+        .eq("conversation_id", id)
+        .eq("owner_id", ownerId())
+        .maybeSingle(),
+      supabase
+        .from("ai_employee_escalations")
+        .select("*")
+        .eq("conversation_id", id)
+        .eq("owner_id", ownerId())
+        .maybeSingle()
+    ]);
+
+    return {
+      conversation: conversation as AiEmployeeConversation & { ai_employees?: { name?: string; business_name?: string } },
+      lead: lead as AiEmployeeLead | null,
+      appointment: appointment as AiEmployeeAppointment | null,
+      escalation: escalation as AiEmployeeEscalation | null
+    };
+  }
+
+  const store = await readDevStore();
+  const conversation = store.conversations.find((item) => item.id === id);
+  if (!conversation) {
+    return null;
+  }
+
+  return {
+    conversation: {
+      ...conversation,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === conversation.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === conversation.ai_employee_id)?.business_name
+      }
+    },
+    lead: store.leads.find((item) => item.conversation_id === id) ?? null,
+    appointment: store.appointments.find((item) => item.conversation_id === id) ?? null,
+    escalation: store.escalations.find((item) => item.conversation_id === id) ?? null
+  };
+}
+
+export async function listAppointments(filters: {
+  employeeId?: string;
+  status?: string;
+} = {}) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    let query = supabase
+      .from("ai_employee_appointments")
+      .select("*, ai_employees(name, business_name), ai_employee_leads(name, phone, email)")
+      .eq("owner_id", ownerId())
+      .order("created_at", { ascending: false });
+
+    if (filters.employeeId && filters.employeeId !== "all") {
+      query = query.eq("ai_employee_id", filters.employeeId);
+    }
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("appointment_status", filters.status);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data ?? []) as Array<
+      AiEmployeeAppointment & {
+        ai_employees?: { name?: string; business_name?: string };
+        ai_employee_leads?: { name?: string; phone?: string; email?: string };
+      }
+    >;
+  }
+
+  const store = await readDevStore();
+  return store.appointments
+    .filter((item) => !filters.employeeId || filters.employeeId === "all" || item.ai_employee_id === filters.employeeId)
+    .filter((item) => !filters.status || filters.status === "all" || item.appointment_status === filters.status)
+    .map((appointment) => ({
+      ...appointment,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === appointment.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === appointment.ai_employee_id)?.business_name
+      },
+      ai_employee_leads: store.leads.find((lead) => lead.id === appointment.lead_id)
+    }));
+}
+
+export async function listEscalations(filters: {
+  employeeId?: string;
+  status?: string;
+} = {}) {
+  noStore();
+  const supabase = getSupabaseAdminClient();
+
+  if (supabase) {
+    let query = supabase
+      .from("ai_employee_escalations")
+      .select("*, ai_employees(name, business_name), ai_employee_leads(name, phone, email)")
+      .eq("owner_id", ownerId())
+      .order("created_at", { ascending: false });
+
+    if (filters.employeeId && filters.employeeId !== "all") {
+      query = query.eq("ai_employee_id", filters.employeeId);
+    }
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data ?? []) as Array<
+      AiEmployeeEscalation & {
+        ai_employees?: { name?: string; business_name?: string };
+        ai_employee_leads?: { name?: string; phone?: string; email?: string };
+      }
+    >;
+  }
+
+  const store = await readDevStore();
+  return store.escalations
+    .filter((item) => !filters.employeeId || filters.employeeId === "all" || item.ai_employee_id === filters.employeeId)
+    .filter((item) => !filters.status || filters.status === "all" || item.status === filters.status)
+    .map((escalation) => ({
+      ...escalation,
+      ai_employees: {
+        name: store.employees.find((employee) => employee.id === escalation.ai_employee_id)?.name,
+        business_name: store.employees.find((employee) => employee.id === escalation.ai_employee_id)?.business_name
+      },
+      ai_employee_leads: store.leads.find((lead) => lead.id === escalation.lead_id)
+    }));
 }

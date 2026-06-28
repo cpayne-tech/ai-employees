@@ -10,9 +10,7 @@ const fieldQuestions: Record<string, string> = {
   phone: "What is the best phone number for the team to reach you?",
   email: "What email should we use for the appointment request?",
   service_needed: "What service are you interested in?",
-  age_range: "What age range should the team include with the appointment request?",
-  state: "What state are you located in?",
-  coverage_goal: "What goal should the team understand before the appointment?",
+  urgency: "How soon are you hoping to get help?",
   preferred_time: "What day and time would you prefer for the consultation?"
 };
 
@@ -22,12 +20,12 @@ const escalationPatterns = [
     reason: "Visitor requested a human."
   },
   {
-    pattern: /\b(price|quote|premium|how much|cost)\b/i,
-    reason: "Visitor asked for pricing or quote information."
+    pattern: /\b(price|quote|how much|cost)\b/i,
+    reason: "Visitor asked for pricing that may need human confirmation."
   },
   {
-    pattern: /\b(underwriting|medical condition|diabetes|cancer|diagnosis)\b/i,
-    reason: "Visitor asked about medical underwriting or licensed guidance."
+    pattern: /\b(contract|legal|medical|licensed advice|guarantee)\b/i,
+    reason: "Visitor may need advice outside the AI employee scope."
   },
   {
     pattern: /\b(emergency|urgent crisis|lawsuit|complaint)\b/i,
@@ -73,6 +71,7 @@ export function runReceptionistTestTurn(input: {
         `What should I capture for ${missingField.replaceAll("_", " ")}?`;
     } else {
       extractedLead.qualified = true;
+      extractedLead.appointment_requested = Boolean(extractedLead.preferred_time);
       status = extractedLead.preferred_time
         ? "appointment_requested"
         : "qualified";
@@ -135,12 +134,11 @@ function extractLead(message: string, priorLead: ExtractedLead): ExtractedLead {
   const phone = message.match(
     /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}/
   )?.[0];
-  const state = message.match(/\b(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)\b/i)?.[0];
-  const ageRange = message.match(/\b(?:18-24|25-34|35-44|45-54|55-64|65\+|\d{2}\s?(?:to|-)\s?\d{2})\b/i)?.[0];
+  const urgency = message.match(/\b(?:asap|urgent|today|tomorrow|this week|next week|soon|no rush)\b/i)?.[0];
   const preferredTime = message.match(
     /\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next week|morning|afternoon|evening|at\s+\d{1,2}(?::\d{2})?\s?(?:am|pm)?)\b.*$/i
   )?.[0];
-  const coverageGoal = message.match(
+  const serviceNeeded = message.match(
     /\b(?:need|want|looking for|interested in|help with|service for|appointment for)\s+([^.?!]+)/i
   )?.[0];
   const name = message.match(/\b(?:my name is|i am|i'm|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b/)?.[1];
@@ -151,18 +149,14 @@ function extractLead(message: string, priorLead: ExtractedLead): ExtractedLead {
   if (phone) {
     lead.phone = phone;
   }
-  if (state) {
-    lead.state = state.toUpperCase();
-  }
-  if (ageRange) {
-    lead.age_range = ageRange;
+  if (urgency) {
+    lead.urgency = urgency;
   }
   if (preferredTime) {
     lead.preferred_time = preferredTime.trim();
   }
-  if (coverageGoal) {
-    lead.coverage_goal = coverageGoal.trim();
-    lead.service_needed = coverageGoal.trim();
+  if (serviceNeeded) {
+    lead.service_needed = serviceNeeded.trim();
   }
   if (name) {
     lead.name = name;

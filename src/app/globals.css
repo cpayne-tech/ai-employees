@@ -59,6 +59,10 @@ textarea {
   z-index: 10;
 }
 
+.topbar nav {
+  justify-content: flex-end;
+}
+
 .brand-lockup {
   display: grid;
   gap: 2px;
@@ -157,6 +161,11 @@ h3 {
   background: transparent;
   border-color: transparent;
   color: var(--brand-dark);
+}
+
+.button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 .button:disabled {
@@ -259,6 +268,11 @@ tr:last-child td {
   color: var(--danger);
 }
 
+.badge.archived {
+  background: #eef2f6;
+  color: #475467;
+}
+
 .empty-state {
   align-items: center;
   display: grid;
@@ -270,6 +284,39 @@ tr:last-child td {
 .form-grid {
   display: grid;
   gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-section {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.filters-bar {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 0.8fr) minmax(220px, 1fr) auto auto;
+  margin-top: 18px;
+}
+
+.check-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.check-row input {
+  min-height: auto;
+  width: auto;
+}
+
+.two-column-grid {
+  align-items: start;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -402,6 +449,55 @@ textarea {
   padding: 12px;
 }
 
+.setup-note {
+  background: #fffbeb;
+  border: 1px solid #fedf89;
+  border-radius: 8px;
+  color: #92400e;
+  font-weight: 700;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+}
+
+.json-block {
+  background: #101828;
+  border-radius: 8px;
+  color: #f9fafb;
+  font-size: 12px;
+  overflow: auto;
+  padding: 14px;
+  white-space: pre-wrap;
+}
+
+.checklist {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.checklist li {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.checklist li::before {
+  content: "Needs setup";
+  color: var(--danger);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 10px;
+  text-transform: uppercase;
+}
+
+.checklist li[data-ok="true"]::before {
+  color: var(--ok);
+  content: "Ready";
+}
+
 .login-shell {
   align-items: center;
   display: grid;
@@ -437,6 +533,8 @@ textarea {
 
   .stats-grid,
   .form-grid,
+  .filters-bar,
+  .two-column-grid,
   .detail-list {
     grid-template-columns: 1fr;
   }

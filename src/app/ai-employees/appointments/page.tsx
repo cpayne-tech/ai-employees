@@ -1,0 +1,92 @@
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
+import { AppFrame } from "@/ai-employees/components/app-frame";
+import { listAiEmployees, listAppointments } from "@/ai-employees/data/repository";
+
+export default async function AppointmentsPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  await requireAiEmployeesAccess();
+  const query = await searchParams;
+  const employeeId = param(query.employee);
+  const status = param(query.status);
+  const [employees, appointments] = await Promise.all([
+    listAiEmployees({ includeArchived: true }),
+    listAppointments({ employeeId, status })
+  ]);
+
+  return (
+    <AppFrame>
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">Calendar queue</div>
+          <h1>Appointments</h1>
+          <p className="muted">Requested appointments. Calendar confirmation is intentionally not connected yet.</p>
+        </div>
+      </div>
+
+      <form className="card filters-bar">
+        <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />
+        <Select label="Status" name="status" value={status} options={[["requested", "requested"], ["confirmed", "confirmed"], ["completed", "completed"], ["canceled", "canceled"]]} />
+        <button className="button secondary" type="submit">Apply filters</button>
+      </form>
+
+      <section className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Requested time</th>
+              <th>Employee</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((appointment) => (
+              <tr key={appointment.id}>
+                <td>{appointment.ai_employee_leads?.name ?? appointment.ai_employee_leads?.phone ?? "Unknown lead"}</td>
+                <td>{appointment.requested_time}</td>
+                <td>{appointment.ai_employees?.name ?? "Unknown employee"}</td>
+                <td>{appointment.appointment_status}</td>
+                <td>{appointment.notes ?? "No notes"}</td>
+                <td>{new Date(appointment.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!appointments.length ? <div className="empty-state"><h2>No appointment requests match these filters</h2></div> : null}
+      </section>
+    </AppFrame>
+  );
+}
+
+function Select({
+  label,
+  name,
+  value,
+  options
+}: {
+  label: string;
+  name: string;
+  value: string;
+  options: string[][];
+}) {
+  return (
+    <div className="field">
+      <label htmlFor={name}>{label}</label>
+      <select id={name} name={name} defaultValue={value || "all"}>
+        <option value="all">All</option>
+        {options.map(([optionValue, optionLabel]) => (
+          <option value={optionValue} key={optionValue}>{optionLabel}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function param(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}

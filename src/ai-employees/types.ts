@@ -1,6 +1,10 @@
-export type AiEmployeeStatus = "draft" | "active" | "paused";
+export type AiEmployeeStatus = "draft" | "active" | "paused" | "archived";
 
-export type AiEmployeeType = "AI Receptionist / Appointment Setter";
+export type AiEmployeeType =
+  | "AI Receptionist / Appointment Setter"
+  | "AI Website Concierge"
+  | "AI Lead Qualifier"
+  | "AI Customer Support Agent";
 
 export type TranscriptMessage = {
   role: "visitor" | "assistant" | "system";
@@ -15,13 +19,11 @@ export type ExtractedLead = {
   service_needed?: string;
   preferred_time?: string;
   urgency?: string;
-  age_range?: string;
-  state?: string;
-  coverage_goal?: string;
   notes?: string;
   qualified?: boolean;
   escalation_needed?: boolean;
   escalation_reason?: string;
+  appointment_requested?: boolean;
 };
 
 export type AiEmployee = {
@@ -46,6 +48,11 @@ export type AiEmployee = {
   disqualifying_rules: string;
   required_lead_fields: string[];
   primary_goal: string;
+  ghl_location_id: string;
+  ghl_calendar_id: string;
+  ghl_pipeline_id: string;
+  ghl_opportunity_stage_id: string;
+  ghl_source_name: string;
   created_at: string;
   updated_at: string;
 };

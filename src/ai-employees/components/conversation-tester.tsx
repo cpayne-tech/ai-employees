@@ -63,6 +63,7 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
             preferred_time: state.extractedLead.preferred_time,
             urgency: state.extractedLead.urgency,
             qualified: state.extractedLead.qualified ? "true" : "false",
+            appointment_requested: state.extractedLead.appointment_requested ? "true" : "false",
             escalation: state.extractedLead.escalation_needed ? state.extractedLead.escalation_reason : "false"
           }).map(([label, value]) => (
             <div className="extract-row" key={label}>

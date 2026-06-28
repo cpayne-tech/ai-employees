@@ -14,6 +14,24 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <Link href="/ai-employees" className="button ghost">
             Dashboard
           </Link>
+          <Link href="/ai-employees?includeArchived=1" className="button ghost">
+            AI Employees
+          </Link>
+          <Link href="/ai-employees/leads" className="button ghost">
+            Leads
+          </Link>
+          <Link href="/ai-employees/conversations" className="button ghost">
+            Conversations
+          </Link>
+          <Link href="/ai-employees/appointments" className="button ghost">
+            Appointments
+          </Link>
+          <Link href="/ai-employees/escalations" className="button ghost">
+            Escalations
+          </Link>
+          <Link href="/ai-employees/settings" className="button ghost">
+            Settings
+          </Link>
           <Link href="/ai-employees/new" className="button">
             New AI Employee
           </Link>

@@ -1,0 +1,101 @@
+import Link from "next/link";
+import { requireAiEmployeesAccess } from "@/ai-employees/auth";
+import { AppFrame } from "@/ai-employees/components/app-frame";
+import { listAiEmployees, listConversations } from "@/ai-employees/data/repository";
+
+export default async function ConversationsPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  await requireAiEmployeesAccess();
+  const query = await searchParams;
+  const employeeId = param(query.employee);
+  const status = param(query.status);
+  const mode = param(query.mode);
+  const [employees, conversations] = await Promise.all([
+    listAiEmployees({ includeArchived: true }),
+    listConversations({ employeeId, status, mode })
+  ]);
+
+  return (
+    <AppFrame>
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">Conversation review</div>
+          <h1>Conversations</h1>
+          <p className="muted">Review transcripts, extracted leads, appointments, and escalations.</p>
+        </div>
+      </div>
+
+      <form className="card filters-bar">
+        <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />
+        <Select label="Status" name="status" value={status} options={[["in_progress", "in_progress"], ["qualified", "qualified"], ["appointment_requested", "appointment_requested"], ["escalated", "escalated"]]} />
+        <Select label="Mode" name="mode" value={mode} options={[["test", "test"], ["live", "live"]]} />
+        <button className="button secondary" type="submit">Apply filters</button>
+      </form>
+
+      <section className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Visitor</th>
+              <th>Employee</th>
+              <th>Status</th>
+              <th>Mode</th>
+              <th>Created</th>
+              <th>Summary</th>
+              <th>Lead</th>
+              <th>Escalation</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {conversations.map((conversation) => (
+              <tr key={conversation.id}>
+                <td>{conversation.visitor_name ?? conversation.extracted_lead.name ?? "Unknown visitor"}</td>
+                <td>{conversation.ai_employees?.name ?? "Unknown employee"}</td>
+                <td>{conversation.status}</td>
+                <td>{conversation.mode}</td>
+                <td>{new Date(conversation.created_at).toLocaleString()}</td>
+                <td>{conversation.summary ?? "No summary"}</td>
+                <td>{conversation.extracted_lead.name || conversation.extracted_lead.phone || conversation.extracted_lead.email ? "yes" : "no"}</td>
+                <td>{conversation.extracted_lead.escalation_needed ? "yes" : "no"}</td>
+                <td><Link className="button secondary" href={`/ai-employees/conversations/${conversation.id}`}>Open</Link></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!conversations.length ? <div className="empty-state"><h2>No conversations match these filters</h2></div> : null}
+      </section>
+    </AppFrame>
+  );
+}
+
+function Select({
+  label,
+  name,
+  value,
+  options
+}: {
+  label: string;
+  name: string;
+  value: string;
+  options: string[][];
+}) {
+  return (
+    <div className="field">
+      <label htmlFor={name}>{label}</label>
+      <select id={name} name={name} defaultValue={value || "all"}>
+        <option value="all">All</option>
+        {options.map(([optionValue, optionLabel]) => (
+          <option value={optionValue} key={optionValue}>{optionLabel}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function param(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}

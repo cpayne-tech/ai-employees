@@ -12,15 +12,21 @@ import {
   saveExtractedLead,
   saveTestConversation,
   updateAiEmployee,
+  updateAiEmployeeStatus,
   type AiEmployeeInput
 } from "@/ai-employees/data/repository";
-import { runReceptionistTestTurn } from "@/ai-employees/tester-engine";
+import { runAiEmployeeTestTurn } from "@/ai-employees/ai";
 import type { ExtractedLead, TranscriptMessage } from "@/ai-employees/types";
 
 const employeeSchema = z.object({
   name: z.string().min(1),
-  type: z.literal("AI Receptionist / Appointment Setter"),
-  status: z.enum(["draft", "active", "paused"]),
+  type: z.enum([
+    "AI Receptionist / Appointment Setter",
+    "AI Website Concierge",
+    "AI Lead Qualifier",
+    "AI Customer Support Agent"
+  ]),
+  status: z.enum(["draft", "active", "paused", "archived"]),
   business_name: z.string().min(1),
   industry: z.string().min(1),
   business_phone: z.string().optional().default(""),
@@ -36,7 +42,12 @@ const employeeSchema = z.object({
   faqs: z.string().optional().default(""),
   disqualifying_rules: z.string().optional().default(""),
   required_lead_fields: z.string().min(1),
-  primary_goal: z.string().optional().default("")
+  primary_goal: z.string().optional().default(""),
+  ghl_location_id: z.string().optional().default(""),
+  ghl_calendar_id: z.string().optional().default(""),
+  ghl_pipeline_id: z.string().optional().default(""),
+  ghl_opportunity_stage_id: z.string().optional().default(""),
+  ghl_source_name: z.string().optional().default("")
 });
 
 export type TesterActionState = {
@@ -60,6 +71,27 @@ export async function updateAiEmployeeAction(id: string, formData: FormData) {
   revalidatePath("/ai-employees");
   revalidatePath(`/ai-employees/${id}`);
   redirect(`/ai-employees/${employee.id}`);
+}
+
+export async function pauseAiEmployeeAction(id: string) {
+  await assertAiEmployeesAccess();
+  await updateAiEmployeeStatus(id, "paused");
+  revalidatePath("/ai-employees");
+  revalidatePath(`/ai-employees/${id}`);
+}
+
+export async function activateAiEmployeeAction(id: string) {
+  await assertAiEmployeesAccess();
+  await updateAiEmployeeStatus(id, "active");
+  revalidatePath("/ai-employees");
+  revalidatePath(`/ai-employees/${id}`);
+}
+
+export async function archiveAiEmployeeAction(id: string) {
+  await assertAiEmployeesAccess();
+  await updateAiEmployeeStatus(id, "archived");
+  revalidatePath("/ai-employees");
+  revalidatePath(`/ai-employees/${id}`);
 }
 
 export async function sendTestMessageAction(
@@ -86,7 +118,7 @@ export async function sendTestMessageAction(
     };
   }
 
-  const result = runReceptionistTestTurn({
+  const result = await runAiEmployeeTestTurn({
     employee: detail.employee,
     visitorMessage,
     priorTranscript: previousState.transcript,
