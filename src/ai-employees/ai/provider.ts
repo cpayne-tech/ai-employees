@@ -36,7 +36,7 @@ export async function runAiEmployeeProviderTurn(input: {
     return {
       ...runReceptionistTestTurn(input),
       systemPrompt,
-      providerWarning: error instanceof Error ? error.message : "AI provider call failed."
+      providerWarning: error instanceof Error ? error.message : "Simulation provider call failed."
     };
   }
 }
@@ -80,7 +80,7 @@ async function runOpenAiTurn(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI provider returned ${response.status}: ${errorText.slice(0, 180)}`);
+    throw new Error(`OpenAI simulation provider returned ${response.status}: ${errorText.slice(0, 180)}`);
   }
 
   const body = await response.json() as {

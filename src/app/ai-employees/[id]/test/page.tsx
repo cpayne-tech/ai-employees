@@ -34,7 +34,7 @@ export default async function TestAiEmployeePage({
           </Link>
         </>
       }
-      eyebrow="Test mode"
+      eyebrow="Internal Simulation"
       subtitle={`${detail.employee.type} for ${detail.employee.business_name}`}
       title={detail.employee.name}
     >
@@ -44,7 +44,7 @@ export default async function TestAiEmployeePage({
 
       {!provider.configured ? (
         <div className="setup-note">
-          AI provider not configured. Test chat is using the safe local mock response layer until `OPENAI_API_KEY` is added.
+          Simulation provider not configured. Internal Simulation is using the safe local mock response layer until `OPENAI_API_KEY` is added.
         </div>
       ) : null}
 

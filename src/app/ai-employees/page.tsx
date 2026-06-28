@@ -12,15 +12,17 @@ import {
   listEscalations,
   listLeads
 } from "@/ai-employees/data/repository";
+import { listGhlAiAgentProfiles } from "@/ai-employees/data/ghl-profiles";
 import { aiEmployeeRoleBlueprints } from "@/ai-employees/role-blueprints";
 
 export default async function AiEmployeesDashboardPage() {
   await requireAiEmployeesAccess();
-  const [employees, leads, conversations, escalations] = await Promise.all([
+  const [employees, leads, conversations, escalations, ghlProfiles] = await Promise.all([
     listAiEmployees({ includeArchived: true }),
     listLeads(),
     listConversations(),
-    listEscalations({ status: "open" })
+    listEscalations({ status: "open" }),
+    listGhlAiAgentProfiles()
   ]);
   const aiProvider = getAiProviderStatus();
   const visibleEmployees = employees.filter((employee) => employee.status !== "archived");
@@ -34,7 +36,7 @@ export default async function AiEmployeesDashboardPage() {
   );
   const setupItems = [
     {
-      label: "AI provider",
+      label: "Simulation provider",
       ready: aiProvider.configured,
       detail: aiProvider.configured ? aiProvider.provider : "Add API key later"
     },
@@ -49,12 +51,16 @@ export default async function AiEmployeesDashboardPage() {
       detail: "Not connected"
     },
     {
-      label: "Public capture",
+      label: "GoHighLevel Deployment",
       ready: false,
-      detail: "Widget/API pending"
+      detail: "Native GHL setup pending"
     }
   ];
   const setupReadyCount = setupItems.filter((item) => item.ready).length;
+  const profilesReady = ghlProfiles.filter((profile) => profile.deployment_status === "ready_for_review").length;
+  const profilesExported = ghlProfiles.filter((profile) => profile.deployment_status === "exported").length;
+  const profilesConnected = ghlProfiles.filter((profile) => profile.deployment_status === "connected").length;
+  const profilesNeedUpdate = ghlProfiles.filter((profile) => profile.deployment_status === "needs_update").length;
 
   return (
     <AppFrame
@@ -64,7 +70,7 @@ export default async function AiEmployeesDashboardPage() {
           <Link className="button" href="/ai-employees/new">New AI Employee</Link>
         </>
       }
-      subtitle="A command center for the five AI employees that will run intake, qualification, support, appointments, and follow-up."
+      subtitle="A GoHighLevel-native control center for AI Employees that are configured, simulated, exported, and deployed into GHL."
       title="Dashboard"
     >
       <section className="dashboard-hero">
@@ -72,8 +78,8 @@ export default async function AiEmployeesDashboardPage() {
           <div className="eyebrow">AI workforce rollout</div>
           <h2>{configuredRoles.length} of 5 roles configured</h2>
           <p>
-            Build the operating team first, then connect AI, GoHighLevel, calendar,
-            and public lead capture when you are ready.
+            Build the operating team first, create GHL AI Agent profiles, run Internal Simulation,
+            then export the configuration into GoHighLevel.
           </p>
         </div>
         <div className="hero-actions">
@@ -95,19 +101,19 @@ export default async function AiEmployeesDashboardPage() {
           value={activeEmployees.length}
         />
         <StatCard
-          detail="Captured from test/live conversations"
-          label="Leads"
-          value={leads.length}
+          detail="Saved native AI Agent profiles"
+          label="GHL Profiles"
+          value={ghlProfiles.length}
         />
         <StatCard
-          detail="Conversation records"
-          label="Conversations"
-          value={conversations.length}
+          detail={`${profilesReady} ready for review`}
+          label="Profiles Exported"
+          value={profilesExported}
         />
         <StatCard
-          detail="Calendar connection pending"
-          label="Appointment Requests"
-          value={totalAppointments}
+          detail={`${profilesNeedUpdate} need update`}
+          label="Profiles Connected"
+          value={profilesConnected}
         />
         <StatCard
           detail="Needs human review"
@@ -187,8 +193,8 @@ export default async function AiEmployeesDashboardPage() {
               />
               <AttentionItem
                 count={setupItems.length - setupReadyCount}
-                href="/ai-employees/settings"
-                label="launch dependencies still need setup"
+                href="/ai-employees/gohighlevel"
+                label="GoHighLevel deployment items still need setup"
               />
               <AttentionItem
                 count={escalations.length}
@@ -245,7 +251,7 @@ export default async function AiEmployeesDashboardPage() {
             </div>
           ) : (
             <EmptyState
-              description="Test chat transcripts and future live conversations will show here."
+              description="Internal Simulation transcripts appear here before the profile is deployed into GoHighLevel."
               title="No conversations yet"
             />
           )}

@@ -31,7 +31,7 @@ export default async function AiEmployeesSettingsPage() {
           <div className="health-grid">
             <HealthCard label="Owner ID" ready={ownerExists} />
             <HealthCard label="Supabase" ready={supabaseConnected} />
-            <HealthCard label="AI Provider" ready={aiProvider.configured} />
+            <HealthCard label="Simulation Provider" ready={aiProvider.configured} />
             <HealthCard
               label="GoHighLevel"
               ready={ghlStatus === "ready_for_test"}
@@ -54,7 +54,7 @@ export default async function AiEmployeesSettingsPage() {
               <ChecklistItem ready={ownerExists} text="AI employee owner configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_ADMIN_PASSWORD)} text="Admin password configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_SESSION_SECRET)} text="Session secret configured" />
-              <ChecklistItem ready={aiProvider.configured} text="AI provider key configured" />
+              <ChecklistItem ready={aiProvider.configured} text="Simulation provider key configured" />
               <ChecklistItem ready={ghlApiKeyConfigured} text="GoHighLevel API key configured" />
               <ChecklistItem ready={ghlLocationConfigured} text="GoHighLevel location ID configured" />
             </ul>
@@ -69,7 +69,7 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <div className="record-list">
-                <IntegrationRow label="AI Provider" state={aiProvider.configured ? "ready" : "needs-setup"} />
+                <IntegrationRow label="Simulation Provider" state={aiProvider.configured ? "ready" : "needs-setup"} />
                 <IntegrationRow
                   label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
                   state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
@@ -88,15 +88,33 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <ol className="next-steps">
-                <li>Add AI provider key</li>
+                <li>Create GoHighLevel AI Agent profiles</li>
                 <li>Add GoHighLevel credentials</li>
-                <li>Connect calendar/booking workflow</li>
-                <li>Test AI employee flow</li>
-                <li>Deploy public widget or lead capture endpoint</li>
+                <li>Map workflow triggers, pipeline stages, and calendars</li>
+                <li>Run Internal Simulation before export</li>
+                <li>Configure the native GoHighLevel AI Agent</li>
               </ol>
             </section>
           </div>
         </div>
+
+        <section className="card">
+          <div className="section-header">
+            <div>
+              <h2>Integration Hub</h2>
+              <p className="muted">GoHighLevel is the execution layer. This app is the control center.</p>
+            </div>
+          </div>
+          <div className="integration-card-grid">
+            <IntegrationCard title="GoHighLevel Native AI Agents" text="Primary execution layer for AI Employees." state="ready" />
+            <IntegrationCard title="GoHighLevel Conversations" text="Native GHL conversation channels receive and manage messages." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Workflows" text="Workflow triggers route lead capture, qualification, follow-up, and handoff events." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Calendar" text="Calendar mapping prepares appointment requests without confirming unavailable times." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Pipelines" text="Pipeline mapping prepares opportunity stages for AI Employee outcomes." state="needs-setup" />
+            <IntegrationCard title="n8n Optional Middleware" text="Optional middleware for advanced automation." state="not-connected" />
+            <IntegrationCard title="Simulation Provider" text="Used only to test prompts and behavior before GoHighLevel deployment." state={aiProvider.configured ? "ready" : "needs-setup"} />
+          </div>
+        </section>
       </div>
     </AppFrame>
   );
@@ -136,6 +154,26 @@ function IntegrationRow({ label, state }: { label: string; state: BadgeState }) 
     <div className="record-row">
       <strong>{label}</strong>
       <SetupBadge state={state} />
+    </div>
+  );
+}
+
+function IntegrationCard({
+  state,
+  text,
+  title
+}: {
+  state: BadgeState;
+  text: string;
+  title: string;
+}) {
+  return (
+    <div className="role-card">
+      <div className="role-card-header">
+        <strong>{title}</strong>
+        <SetupBadge state={state} />
+      </div>
+      <p>{text}</p>
     </div>
   );
 }

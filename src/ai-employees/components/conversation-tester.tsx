@@ -26,16 +26,16 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
   return (
     <section className="card tester">
       <div>
-        <h2>Test employee</h2>
-        <p className="muted">{employee.name} is running in test mode. Test conversations are saved separately from future live traffic.</p>
+        <h2>Internal Simulation</h2>
+        <p className="muted">{employee.name} is running in Internal Simulation mode to test prompts before GoHighLevel deployment.</p>
       </div>
       <div className="button-row">
-        <span className="setup-badge needs-setup">Mode: test</span>
+        <span className="setup-badge needs-setup">Mode: simulation</span>
         <span className={`setup-badge ${state.status === "escalated" ? "not-connected" : state.status === "qualified" || state.status === "appointment_requested" ? "ready" : "needs-setup"}`}>
           {state.status}
         </span>
         <Link className="button secondary" href={`/ai-employees/${employee.id}/test`}>
-          New test conversation
+          New simulation
         </Link>
         <Link className="button secondary" href={`/ai-employees/${employee.id}`}>
           Back to details
@@ -63,7 +63,7 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
       {state.providerWarning ? <div className="setup-note">{state.providerWarning}</div> : null}
       <form ref={formRef} action={formAction} className="button-row">
         <input type="hidden" name="employeeId" value={employee.id} />
-        <input name="message" placeholder="Type a simulated visitor message" />
+        <input name="message" placeholder="Type a simulated GHL conversation message" />
         <SendButton />
       </form>
       <div>

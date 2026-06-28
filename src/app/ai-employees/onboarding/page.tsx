@@ -13,7 +13,7 @@ export default async function AiEmployeeOnboardingPage() {
   return (
     <AppFrame
       eyebrow="Guided setup"
-      subtitle="Create a generic AI employee with the minimum useful configuration for test chat and lead capture."
+      subtitle="Create a generic AI employee with the minimum useful configuration for GoHighLevel-native AI Agent deployment."
       title="AI Employee Onboarding"
     >
       <form action={createOnboardingAiEmployeeAction} className="wizard-form">
@@ -83,8 +83,7 @@ export default async function AiEmployeeOnboardingPage() {
 
         <WizardStep number="6" title="Review and create">
           <p className="muted">
-            This creates a draft AI employee. You can test it immediately, then add API keys
-            and integrations when ready.
+            This creates a draft AI employee. You can run an Internal Simulation, then build the GoHighLevel AI Agent profile and export package.
           </p>
           <input name="status" type="hidden" value="draft" />
           <input name="ghl_location_id" type="hidden" value="" />

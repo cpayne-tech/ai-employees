@@ -11,7 +11,8 @@ import {
   MessageSquareText,
   Plus,
   Settings,
-  Siren
+  Siren,
+  Workflow
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,7 +33,7 @@ const mainNav = [
       pathname === "/ai-employees/employees" ||
       pathname === "/ai-employees/new" ||
       pathname === "/ai-employees/onboarding" ||
-      /^\/ai-employees\/[0-9a-f-]{36}(?:\/(?:edit|test))?$/.test(pathname)
+      /^\/ai-employees\/[0-9a-f-]{36}(?:\/(?:edit|test|ghl-profile|ghl-export))?$/.test(pathname)
   },
   {
     href: "/ai-employees/leads",
@@ -57,6 +58,12 @@ const mainNav = [
     icon: Siren,
     label: "Escalations",
     match: (pathname: string) => pathname.startsWith("/ai-employees/escalations")
+  },
+  {
+    href: "/ai-employees/gohighlevel",
+    icon: Workflow,
+    label: "GoHighLevel",
+    match: (pathname: string) => pathname.startsWith("/ai-employees/gohighlevel")
   }
 ];
 

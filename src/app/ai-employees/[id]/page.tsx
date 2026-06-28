@@ -36,8 +36,14 @@ export default async function AiEmployeeProfilePage({
           <Link href={`/ai-employees/${employee.id}/edit`} className="button secondary">
             Edit settings
           </Link>
+          <Link href={`/ai-employees/${employee.id}/ghl-profile`} className="button">
+            GHL profile
+          </Link>
+          <Link href={`/ai-employees/${employee.id}/ghl-export`} className="button secondary">
+            Export for GHL
+          </Link>
           <Link href={`/ai-employees/${employee.id}/test`} className="button">
-            Test employee
+            Internal simulation
           </Link>
           {employee.status === "active" ? (
             <form action={pauseAiEmployeeAction.bind(null, employee.id)}>
@@ -50,7 +56,7 @@ export default async function AiEmployeeProfilePage({
           )}
           <form action={archiveAiEmployeeAction.bind(null, employee.id)}>
             <button className="button danger" type="submit">
-              {employee.name === "OBMC Website Concierge" ? "Archive test employee" : "Archive"}
+              Archive
             </button>
           </form>
         </>
@@ -128,8 +134,8 @@ export default async function AiEmployeeProfilePage({
           </section>
 
           <section className="card">
-            <h2>GoHighLevel Integration - Coming Next</h2>
-            <p className="muted">Not connected. These saved fields are placeholders for Part 3.</p>
+            <h2>GoHighLevel Native Mapping</h2>
+            <p className="muted">GoHighLevel is the execution layer. These fields support native AI Agent, Conversations, workflow, calendar, and pipeline setup.</p>
             <div className="detail-list">
               <Detail label="Location ID" value={employee.ghl_location_id} />
               <Detail label="Calendar ID" value={employee.ghl_calendar_id} />

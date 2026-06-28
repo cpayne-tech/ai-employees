@@ -16,8 +16,12 @@ import {
   updateAiEmployeeStatus,
   type AiEmployeeInput
 } from "@/ai-employees/data/repository";
+import {
+  markGhlAiAgentProfileExported,
+  saveGhlAiAgentProfile
+} from "@/ai-employees/data/ghl-profiles";
 import { runAiEmployeeTestTurn } from "@/ai-employees/ai";
-import type { ExtractedLead, TranscriptMessage } from "@/ai-employees/types";
+import type { ExtractedLead, GhlDeploymentStatus, TranscriptMessage } from "@/ai-employees/types";
 
 const employeeSchema = z.object({
   name: z.string().min(1),
@@ -116,6 +120,53 @@ export async function archiveLeadAction(id: string) {
   revalidatePath(`/ai-employees/leads/${id}`);
 }
 
+export async function saveGhlAiAgentProfileAction(
+  aiEmployeeId: string,
+  formData: FormData
+) {
+  await assertAiEmployeesAccess();
+  const profile = await saveGhlAiAgentProfile({
+    id: optionalString(formData.get("id")) ?? undefined,
+    ai_employee_id: aiEmployeeId,
+    workspace_id: null,
+    profile_name: requiredString(formData.get("profile_name")),
+    ghl_location_id: optionalString(formData.get("ghl_location_id")),
+    ghl_agent_id: optionalString(formData.get("ghl_agent_id")),
+    ghl_channel: optionalString(formData.get("ghl_channel")),
+    objective: optionalString(formData.get("objective")),
+    personality: optionalString(formData.get("personality")),
+    instructions: optionalString(formData.get("instructions")),
+    knowledge_summary: optionalString(formData.get("knowledge_summary")),
+    lead_capture_fields: splitLines(formData.get("lead_capture_fields")),
+    qualification_rules: parseTextareaObject(formData.get("qualification_rules")),
+    escalation_rules: parseTextareaObject(formData.get("escalation_rules")),
+    booking_rules: parseTextareaObject(formData.get("booking_rules")),
+    workflow_triggers: parseTextareaObject(formData.get("workflow_triggers")),
+    pipeline_mapping: parseTextareaObject(formData.get("pipeline_mapping")),
+    calendar_mapping: parseTextareaObject(formData.get("calendar_mapping")),
+    deployment_status: requiredString(formData.get("deployment_status")) as GhlDeploymentStatus
+  });
+
+  revalidatePath("/ai-employees");
+  revalidatePath("/ai-employees/gohighlevel");
+  revalidatePath(`/ai-employees/${aiEmployeeId}`);
+  revalidatePath(`/ai-employees/${aiEmployeeId}/ghl-profile`);
+  revalidatePath(`/ai-employees/${aiEmployeeId}/ghl-export`);
+  redirect(`/ai-employees/${aiEmployeeId}/ghl-profile?saved=${profile.id}`);
+}
+
+export async function markGhlAiAgentProfileExportedAction(
+  aiEmployeeId: string,
+  profileId: string
+) {
+  await assertAiEmployeesAccess();
+  await markGhlAiAgentProfileExported(profileId);
+  revalidatePath("/ai-employees");
+  revalidatePath("/ai-employees/gohighlevel");
+  revalidatePath(`/ai-employees/${aiEmployeeId}`);
+  revalidatePath(`/ai-employees/${aiEmployeeId}/ghl-export`);
+}
+
 export async function sendTestMessageAction(
   previousState: TesterActionState,
   formData: FormData
@@ -202,4 +253,40 @@ function parseEmployeeForm(formData: FormData): AiEmployeeInput {
       .map((item) => item.trim())
       .filter(Boolean)
   };
+}
+
+function requiredString(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    throw new Error("Missing required field.");
+  }
+  return text;
+}
+
+function optionalString(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
+function splitLines(value: FormDataEntryValue | null) {
+  return String(value ?? "")
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseTextareaObject(value: FormDataEntryValue | null): Record<string, unknown> {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : { notes: parsed };
+  } catch {
+    return { notes: splitLines(value) };
+  }
 }

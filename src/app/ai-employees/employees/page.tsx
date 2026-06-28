@@ -131,7 +131,10 @@ export default async function AiEmployeesListPage({
                         View
                       </Link>
                       <Link className="button secondary" href={`/ai-employees/${employee.id}/test`}>
-                        Test
+                        Simulate
+                      </Link>
+                      <Link className="button secondary" href={`/ai-employees/${employee.id}/ghl-profile`}>
+                        GHL
                       </Link>
                     </div>
                   </td>

@@ -454,6 +454,12 @@ h3 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.integration-card-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
 .role-card {
   background: var(--surface-3);
   border: 1px solid #dbe3ee;
@@ -1005,6 +1011,15 @@ textarea {
 .wizard-form {
   display: grid;
   gap: 18px;
+}
+
+.export-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.export-section textarea {
+  min-height: 220px;
 }
 
 .wizard-step {

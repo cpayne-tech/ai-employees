@@ -1,4 +1,10 @@
 export type AiEmployeeStatus = "draft" | "active" | "paused" | "archived";
+export type GhlDeploymentStatus =
+  | "draft"
+  | "ready_for_review"
+  | "exported"
+  | "connected"
+  | "needs_update";
 
 export type AiEmployeeType =
   | "AI Receptionist / Appointment Setter"
@@ -63,6 +69,40 @@ export type AiEmployee = {
   ghl_enabled: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type GhlAiAgentProfile = {
+  id: string;
+  owner_id: string;
+  workspace_id: string | null;
+  ai_employee_id: string;
+  profile_name: string;
+  ghl_location_id: string | null;
+  ghl_agent_id: string | null;
+  ghl_channel: string | null;
+  objective: string | null;
+  personality: string | null;
+  instructions: string | null;
+  knowledge_summary: string | null;
+  lead_capture_fields: string[];
+  qualification_rules: Record<string, unknown>;
+  escalation_rules: Record<string, unknown>;
+  booking_rules: Record<string, unknown>;
+  workflow_triggers: Record<string, unknown>;
+  pipeline_mapping: Record<string, unknown>;
+  calendar_mapping: Record<string, unknown>;
+  deployment_status: GhlDeploymentStatus;
+  last_exported_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GhlAiAgentProfileInput = Omit<
+  GhlAiAgentProfile,
+  "id" | "owner_id" | "created_at" | "updated_at" | "last_exported_at"
+> & {
+  id?: string;
+  last_exported_at?: string | null;
 };
 
 export type AiEmployeeSummary = AiEmployee & {
