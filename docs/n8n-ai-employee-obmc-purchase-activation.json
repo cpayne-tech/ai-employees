@@ -1,0 +1,112 @@
+{
+  "name": "Ai Employee OBMC - Purchase Activation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-employee-obmc-purchase-activation-replace-with-private-uuid-before-activation",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-purchase-activation",
+      "name": "Purchase Activation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        0
+      ],
+      "webhookId": "ai-employee-obmc-purchase-activation-template"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json.body ?? $input.first().json;\nconst plan = payload.plan ?? payload.plan_id ?? 'manual';\nconst customer = payload.customer ?? {};\nconst business = payload.business ?? {};\nreturn [{\n  json: {\n    event: 'ai_employee.purchase_activation_received',\n    plan,\n    customer_email: customer.email ?? payload.customer_email ?? null,\n    business_name: business.name ?? payload.business_name ?? null,\n    activation_mode: payload.activation_mode ?? 'manual_review',\n    next_steps: [\n      'confirm payment and plan',\n      'send intake link',\n      'create client workspace after multi-client tables exist',\n      'create five AI employee drafts from approved intake',\n      'map GoHighLevel resources before production activation'\n    ],\n    safety: {\n      no_openai_required: true,\n      no_auto_ghl_writes_without_review: true,\n      lead_generation_not_in_current_build: true\n    },\n    received_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-normalize-purchase",
+      "name": "Normalize Purchase Activation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tasks: [\n      { owner: 'OBMC Admin', task: 'Review payment and selected package', status: 'manual' },\n      { owner: 'Customer', task: 'Complete business intake', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Create five AI employees', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Run local simulation and adjust prompts', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Map GHL resources and approve sync', status: 'manual' }\n    ]\n  }\n}];"
+      },
+      "id": "code-build-activation-tasks",
+      "name": "Build Activation Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-purchase-activation",
+      "name": "Return Activation Plan",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        260,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Purchase Activation Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Purchase Activation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Purchase Activation": {
+      "main": [
+        [
+          {
+            "node": "Build Activation Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Activation Tasks": {
+      "main": [
+        [
+          {
+            "node": "Return Activation Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "OBMC AI Employees"
+    },
+    {
+      "name": "Purchase Activation"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-06-28T00:00:00.000Z",
+  "versionId": "ai-employee-obmc-purchase-activation-local-template"
+}

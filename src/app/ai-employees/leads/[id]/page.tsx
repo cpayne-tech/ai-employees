@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { archiveLeadAction } from "@/ai-employees/actions";
+import { archiveLeadAction, syncLeadToGoHighLevelAction } from "@/ai-employees/actions";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { getLeadDetail } from "@/ai-employees/data/repository";
@@ -23,6 +23,11 @@ export default async function LeadDetailPage({
       actions={
         <>
           <Link className="button secondary" href="/ai-employees/leads">Back to leads</Link>
+          {detail.lead.status !== "archived" ? (
+            <form action={syncLeadToGoHighLevelAction.bind(null, detail.lead.id)}>
+              <button className="button" type="submit">Sync to GoHighLevel</button>
+            </form>
+          ) : null}
           {detail.lead.status !== "archived" ? (
             <form action={archiveLeadAction.bind(null, detail.lead.id)}>
               <button className="button danger" type="submit">Archive lead</button>
@@ -51,6 +56,14 @@ export default async function LeadDetailPage({
           <Detail label="Conversation" value={detail.conversation ? detail.conversation.summary ?? detail.conversation.status : "None"} />
           <Detail label="Appointment request" value={detail.appointment ? `${detail.appointment.requested_time} (${detail.appointment.appointment_status})` : "None"} />
           <Detail label="Escalation" value={detail.escalation ? `${detail.escalation.reason} (${detail.escalation.status})` : "None"} />
+        </section>
+        <section className="card">
+          <h2>GoHighLevel sync</h2>
+          <Detail label="Status" value={detail.lead.ghl_sync_status} />
+          <Detail label="Contact ID" value={detail.lead.ghl_contact_id} />
+          <Detail label="Opportunity ID" value={detail.lead.ghl_opportunity_id} />
+          <Detail label="Last synced" value={detail.lead.ghl_last_synced_at} />
+          <Detail label="Last error" value={detail.lead.ghl_sync_error} />
         </section>
       </div>
     </AppFrame>

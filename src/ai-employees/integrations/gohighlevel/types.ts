@@ -39,3 +39,9 @@ export type GhlPreparedOpportunity = {
   status?: string;
   title: string;
 };
+
+export type GhlLeadSyncResult = {
+  contactId: string | null;
+  opportunityId: string | null;
+  noteId: string | null;
+};

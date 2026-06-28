@@ -19,7 +19,7 @@ export function mapAiLeadToGhlContact(input: GhlMappingInput): GhlPreparedContac
     email: input.lead.email,
     phone: input.lead.phone,
     source: input.employee.ghl_source_name || input.lead.source || "AI Employees",
-    tags: ["ai-employee", input.employee.type, input.lead.status]
+    tags: getContactTags(input)
   };
 }
 
@@ -64,4 +64,30 @@ export function mapAiLeadToGhlOpportunity(input: GhlMappingInput): GhlPreparedOp
     status: input.lead.status,
     title: `${input.lead.name ?? "AI lead"} - ${input.lead.service_needed ?? "New inquiry"}`
   };
+}
+
+function getContactTags(input: GhlMappingInput) {
+  const tags = new Set<string>(["obmc ai - employee lead"]);
+
+  if (input.lead?.status === "qualified") {
+    tags.add("obmc ai - qualified");
+  }
+
+  if (input.lead?.preferred_time || input.lead?.status === "appointment_requested") {
+    tags.add("obmc ai - appointment requested");
+  }
+
+  if (input.lead?.status === "escalated") {
+    tags.add("obmc ai - escalation needed");
+  }
+
+  if (input.lead?.status === "captured") {
+    tags.add("obmc ai - follow-up needed");
+  }
+
+  if (input.employee.type === "AI Customer Support Agent") {
+    tags.add("obmc ai - support request");
+  }
+
+  return Array.from(tags);
 }

@@ -13,6 +13,52 @@ export type GhlDiscoveryStatus =
   | "blocked"
   | "needs_review";
 
+export type AiEmployeeCustomerLifecycleStatus =
+  | "new"
+  | "paid_setup"
+  | "intake_needed"
+  | "in_setup"
+  | "ready_for_review"
+  | "live"
+  | "paused"
+  | "canceled";
+
+export type AiEmployeeCustomerOnboardingStatus =
+  | "not_started"
+  | "intake_sent"
+  | "intake_received"
+  | "drafting"
+  | "review_ready"
+  | "approved"
+  | "live";
+
+export type AiEmployeeCustomerSetupTaskStatus =
+  | "not_started"
+  | "in_progress"
+  | "waiting_on_customer"
+  | "waiting_on_obmc"
+  | "done"
+  | "skipped";
+
+export type AiEmployeeCustomerIntakeStatus =
+  | "draft"
+  | "submitted"
+  | "reviewed"
+  | "approved";
+
+export type AiEmployeeCustomerLaunchPriority =
+  | "standard"
+  | "soon"
+  | "urgent";
+
+export type AiEmployeePurchaseStatus =
+  | "received"
+  | "paid"
+  | "failed"
+  | "refunded"
+  | "canceled"
+  | "requires_review";
+
 export type GhlResourceType =
   | "agency"
   | "location"
@@ -193,6 +239,10 @@ export type AiEmployeeConversation = {
   transcript: TranscriptMessage[];
   extracted_lead: ExtractedLead;
   summary: string | null;
+  ghl_note_id: string | null;
+  ghl_sync_status: "not_synced" | "synced" | "failed";
+  ghl_last_synced_at: string | null;
+  ghl_sync_error: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -210,6 +260,11 @@ export type AiEmployeeLead = {
   status: string;
   source: string;
   notes: string | null;
+  ghl_contact_id: string | null;
+  ghl_opportunity_id: string | null;
+  ghl_sync_status: "not_synced" | "synced" | "failed";
+  ghl_last_synced_at: string | null;
+  ghl_sync_error: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -246,4 +301,131 @@ export type AiEmployeeDetail = {
   leads: AiEmployeeLead[];
   appointments: AiEmployeeAppointment[];
   escalations: AiEmployeeEscalation[];
+};
+
+export type AiEmployeeCustomer = {
+  id: string;
+  owner_id: string;
+  business_name: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  plan_id: string;
+  plan_name: string | null;
+  lifecycle_status: AiEmployeeCustomerLifecycleStatus;
+  onboarding_status: AiEmployeeCustomerOnboardingStatus;
+  portal_token: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_latest_checkout_session_id: string | null;
+  ghl_contact_id: string | null;
+  ghl_opportunity_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiEmployeeCustomerPurchase = {
+  id: string;
+  owner_id: string;
+  customer_id: string | null;
+  plan_id: string;
+  plan_name: string | null;
+  purchase_status: AiEmployeePurchaseStatus;
+  payment_source: "stripe" | "gohighlevel" | "manual";
+  stripe_event_id: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  stripe_invoice_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  amount_total: number | null;
+  currency: string | null;
+  payment_status: string | null;
+  metadata: Record<string, unknown>;
+  raw_summary: Record<string, unknown>;
+  purchased_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiEmployeeCustomerSetupTask = {
+  id: string;
+  owner_id: string;
+  customer_id: string;
+  title: string;
+  description: string | null;
+  task_status: AiEmployeeCustomerSetupTaskStatus;
+  sort_order: number;
+  due_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiEmployeeCustomerIntake = {
+  id: string;
+  owner_id: string;
+  customer_id: string;
+  business_name: string;
+  contact_name: string;
+  email: string;
+  phone: string | null;
+  website: string | null;
+  industry: string;
+  service_area: string | null;
+  services_offered: string;
+  business_hours: string | null;
+  ideal_customer: string | null;
+  common_questions: string | null;
+  appointment_rules: string | null;
+  escalation_contacts: string | null;
+  tone_preferences: string | null;
+  required_lead_fields: string[];
+  disqualifying_rules: string | null;
+  ghl_notes: string | null;
+  launch_priority: AiEmployeeCustomerLaunchPriority;
+  submission_status: AiEmployeeCustomerIntakeStatus;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiEmployeeCustomerIntakeInput = Omit<
+  AiEmployeeCustomerIntake,
+  "id" | "owner_id" | "customer_id" | "submission_status" | "submitted_at" | "reviewed_at" | "created_at" | "updated_at"
+>;
+
+export type AiEmployeeStripeEvent = {
+  id: string;
+  owner_id: string;
+  stripe_event_id: string;
+  event_type: string;
+  livemode: boolean;
+  processed_status: "processed" | "skipped" | "failed";
+  error_message: string | null;
+  customer_id: string | null;
+  purchase_id: string | null;
+  received_at: string;
+  created_at: string;
+};
+
+export type AiEmployeeCustomerSummary = AiEmployeeCustomer & {
+  total_purchases: number;
+  total_setup_tasks: number;
+  completed_setup_tasks: number;
+  latest_purchase_at: string | null;
+  latest_purchase_status: AiEmployeePurchaseStatus | null;
+};
+
+export type AiEmployeeCustomerDetail = {
+  customer: AiEmployeeCustomerSummary;
+  purchases: AiEmployeeCustomerPurchase[];
+  setupTasks: AiEmployeeCustomerSetupTask[];
+  intake: AiEmployeeCustomerIntake | null;
+  stripeEvents: AiEmployeeStripeEvent[];
 };

@@ -9,11 +9,14 @@ import {
   createAppointmentRequest,
   createEscalation,
   getAiEmployeeDetail,
+  getLeadDetail,
   saveExtractedLead,
   saveTestConversation,
+  updateConversationGhlSyncResult,
   updateAiEmployee,
   updateAiEmployeeLeadStatus,
   updateAiEmployeeStatus,
+  updateLeadGhlSyncResult,
   type AiEmployeeInput
 } from "@/ai-employees/data/repository";
 import {
@@ -21,6 +24,8 @@ import {
   saveGhlAiAgentProfile
 } from "@/ai-employees/data/ghl-profiles";
 import { runAiEmployeeTestTurn } from "@/ai-employees/ai";
+import { syncAiLeadToGoHighLevel } from "@/ai-employees/integrations/gohighlevel/client";
+import { sendAiEmployeeEventToN8n } from "@/ai-employees/integrations/n8n/client";
 import type { ExtractedLead, GhlDeploymentStatus, TranscriptMessage } from "@/ai-employees/types";
 
 const employeeSchema = z.object({
@@ -115,6 +120,87 @@ export async function archiveAiEmployeeAction(id: string) {
 export async function archiveLeadAction(id: string) {
   await assertAiEmployeesAccess();
   await updateAiEmployeeLeadStatus(id, "archived");
+  revalidatePath("/ai-employees");
+  revalidatePath("/ai-employees/leads");
+  revalidatePath(`/ai-employees/leads/${id}`);
+}
+
+export async function syncLeadToGoHighLevelAction(id: string) {
+  await assertAiEmployeesAccess();
+  const leadDetail = await getLeadDetail(id);
+
+  if (!leadDetail) {
+    throw new Error("Lead not found.");
+  }
+
+  const employeeDetail = await getAiEmployeeDetail(leadDetail.lead.ai_employee_id);
+
+  if (!employeeDetail) {
+    throw new Error("AI employee not found.");
+  }
+
+  const conversation = employeeDetail.conversations.find(
+    (item) => item.id === leadDetail.lead.conversation_id
+  ) ?? leadDetail.conversation;
+  const appointment = employeeDetail.appointments.find(
+    (item) => item.lead_id === leadDetail.lead.id
+  ) ?? leadDetail.appointment;
+
+  try {
+    const result = await syncAiLeadToGoHighLevel({
+      employee: employeeDetail.employee,
+      lead: leadDetail.lead,
+      conversation,
+      appointment
+    });
+
+    await updateLeadGhlSyncResult({
+      id,
+      status: "synced",
+      contactId: result.contactId,
+      opportunityId: result.opportunityId
+    });
+
+    if (conversation) {
+      await updateConversationGhlSyncResult({
+        id: conversation.id,
+        status: "synced",
+        noteId: result.noteId
+      });
+    }
+
+    try {
+      await sendAiEmployeeEventToN8n({
+        event: "ai_employee.lead_synced",
+        employee: employeeDetail.employee,
+        lead: leadDetail.lead,
+        conversation,
+        appointment,
+        ghl: result
+      });
+    } catch (n8nError) {
+      console.error("n8n orchestration failed after GHL sync", n8nError);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "GoHighLevel sync failed.";
+    await updateLeadGhlSyncResult({
+      id,
+      status: "failed",
+      contactId: leadDetail.lead.ghl_contact_id,
+      opportunityId: leadDetail.lead.ghl_opportunity_id,
+      error: message
+    });
+
+    if (conversation) {
+      await updateConversationGhlSyncResult({
+        id: conversation.id,
+        status: "failed",
+        noteId: conversation.ghl_note_id,
+        error: message
+      });
+    }
+  }
+
   revalidatePath("/ai-employees");
   revalidatePath("/ai-employees/leads");
   revalidatePath(`/ai-employees/leads/${id}`);

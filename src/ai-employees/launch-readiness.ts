@@ -26,6 +26,12 @@ export function getEmployeeLaunchReadiness(
     const lead = item.extracted_lead;
     return Boolean(lead.name || lead.email || lead.phone || lead.service_needed);
   });
+  const ghlMapped = Boolean(
+    employee.ghl_enabled &&
+      employee.ghl_location_id &&
+      employee.ghl_pipeline_id &&
+      employee.ghl_opportunity_stage_id
+  );
 
   const checklist: LaunchChecklistItem[] = [
     { label: "Employee profile complete", state: profileComplete ? "ready" : "needs-setup" },
@@ -35,13 +41,19 @@ export function getEmployeeLaunchReadiness(
     },
     { label: "FAQs or business info added", state: hasBusinessInfo ? "ready" : "needs-setup" },
     { label: "Escalation contact added", state: hasEscalation ? "ready" : "needs-setup" },
-    { label: "Simulation provider configured", state: aiProviderConfigured ? "ready" : "needs-setup" },
+    {
+      label: aiProviderConfigured ? "Simulation (LLM) available" : "Local simulation available",
+      state: "ready"
+    },
     { label: "Internal Simulation completed", state: testConversation ? "ready" : "needs-setup" },
     { label: "Lead extraction verified", state: leadExtractionVerified ? "ready" : "needs-setup" },
-    { label: "GoHighLevel discovery completed", state: "not-connected" },
     {
-      label: "GoHighLevel",
-      state: employee.ghl_enabled ? "needs-setup" : "not-connected"
+      label: "GoHighLevel discovery completed",
+      state: employee.ghl_location_id ? "ready" : "not-connected"
+    },
+    {
+      label: "GoHighLevel API mapping",
+      state: ghlMapped ? "ready" : employee.ghl_enabled ? "needs-setup" : "not-connected"
     }
   ];
   const readyCount = checklist.filter((item) => item.state === "ready").length;
@@ -51,8 +63,8 @@ export function getEmployeeLaunchReadiness(
     checklist,
     score,
     label: readinessLabel({
-      aiProviderConfigured,
       employeeGhlEnabled: employee.ghl_enabled,
+      ghlMapped,
       hasBusinessInfo,
       hasEscalation,
       leadExtractionVerified,
@@ -63,8 +75,8 @@ export function getEmployeeLaunchReadiness(
 }
 
 function readinessLabel(input: {
-  aiProviderConfigured: boolean;
   employeeGhlEnabled: boolean;
+  ghlMapped: boolean;
   hasBusinessInfo: boolean;
   hasEscalation: boolean;
   leadExtractionVerified: boolean;
@@ -77,11 +89,8 @@ function readinessLabel(input: {
   if (!input.testConversation || !input.leadExtractionVerified) {
     return "Needs testing";
   }
-  if (!input.aiProviderConfigured) {
-    return "Ready for internal testing";
-  }
-  if (!input.employeeGhlEnabled) {
+  if (!input.employeeGhlEnabled || !input.ghlMapped) {
     return "Ready for discovery review";
   }
-  return "Ready for safe GoHighLevel integration plan";
+  return "Ready for manual GoHighLevel sync";
 }

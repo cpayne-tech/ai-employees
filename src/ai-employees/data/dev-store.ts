@@ -4,8 +4,13 @@ import type {
   AiEmployee,
   AiEmployeeAppointment,
   AiEmployeeConversation,
+  AiEmployeeCustomer,
+  AiEmployeeCustomerIntake,
+  AiEmployeeCustomerPurchase,
+  AiEmployeeCustomerSetupTask,
   AiEmployeeEscalation,
   AiEmployeeLead,
+  AiEmployeeStripeEvent,
   GhlAiAgentProfile,
   GhlDiscoveryReport
 } from "@/ai-employees/types";
@@ -16,6 +21,11 @@ export type DevStore = {
   leads: AiEmployeeLead[];
   appointments: AiEmployeeAppointment[];
   escalations: AiEmployeeEscalation[];
+  customers: AiEmployeeCustomer[];
+  customerIntakes: AiEmployeeCustomerIntake[];
+  customerPurchases: AiEmployeeCustomerPurchase[];
+  customerSetupTasks: AiEmployeeCustomerSetupTask[];
+  stripeEvents: AiEmployeeStripeEvent[];
   ghlProfiles: GhlAiAgentProfile[];
   ghlDiscoveryReports: GhlDiscoveryReport[];
 };
@@ -28,6 +38,11 @@ const emptyStore = (): DevStore => ({
   leads: [],
   appointments: [],
   escalations: [],
+  customers: [],
+  customerIntakes: [],
+  customerPurchases: [],
+  customerSetupTasks: [],
+  stripeEvents: [],
   ghlProfiles: [],
   ghlDiscoveryReports: []
 });
@@ -43,6 +58,11 @@ export async function readDevStore(): Promise<DevStore> {
       leads: parsed.leads ?? [],
       appointments: parsed.appointments ?? [],
       escalations: parsed.escalations ?? [],
+      customers: parsed.customers ?? [],
+      customerIntakes: parsed.customerIntakes ?? [],
+      customerPurchases: parsed.customerPurchases ?? [],
+      customerSetupTasks: parsed.customerSetupTasks ?? [],
+      stripeEvents: parsed.stripeEvents ?? [],
       ghlProfiles: parsed.ghlProfiles ?? [],
       ghlDiscoveryReports: parsed.ghlDiscoveryReports ?? []
     };

@@ -44,7 +44,7 @@ export default async function TestAiEmployeePage({
 
       {!provider.configured ? (
         <div className="setup-note">
-          Simulation provider not configured. Internal Simulation is using the safe local mock response layer until `OPENAI_API_KEY` is added.
+          Local Simulation is active. This build works without an OpenAI key; add a Simulation (LLM) provider later only if you want richer test conversations.
         </div>
       ) : null}
 

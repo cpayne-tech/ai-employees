@@ -5,13 +5,17 @@ import {
   BarChart3,
   Bot,
   CalendarClock,
+  CreditCard,
   Inbox,
   LayoutDashboard,
   LogOut,
   MessageSquareText,
+  MonitorSmartphone,
   Plus,
+  ReceiptText,
   Settings,
   Siren,
+  UsersRound,
   Workflow
 } from "lucide-react";
 import Link from "next/link";
@@ -64,10 +68,34 @@ const mainNav = [
     icon: Workflow,
     label: "GoHighLevel",
     match: (pathname: string) => pathname.startsWith("/ai-employees/gohighlevel")
+  },
+  {
+    href: "/ai-employees/customers",
+    icon: UsersRound,
+    label: "Customers",
+    match: (pathname: string) => pathname.startsWith("/ai-employees/customers")
+  },
+  {
+    href: "/ai-employees/customer-preview",
+    icon: MonitorSmartphone,
+    label: "Customer View",
+    match: (pathname: string) => pathname.startsWith("/ai-employees/customer-preview")
+  },
+  {
+    href: "/ai-employees/pricing",
+    icon: ReceiptText,
+    label: "Pricing Page",
+    match: (pathname: string) => pathname.startsWith("/ai-employees/pricing")
   }
 ];
 
 const adminNav = [
+  {
+    href: "/ai-employees/billing",
+    icon: CreditCard,
+    label: "Billing",
+    match: (pathname: string) => pathname.startsWith("/ai-employees/billing")
+  },
   {
     href: "/ai-employees/settings",
     icon: Settings,

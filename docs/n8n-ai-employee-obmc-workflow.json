@@ -1,0 +1,84 @@
+{
+  "name": "Ai Employee OBMC - Lead Sync Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-employee-obmc-lead-synced-replace-with-private-uuid-before-activation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-ai-employee-lead-synced",
+      "name": "AI Employee Lead Synced",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        0
+      ],
+      "webhookId": "ai-employee-obmc-lead-synced-template"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $json.body ?? $json;\nconst lead = payload.lead ?? {};\nconst employee = payload.employee ?? {};\nconst ghl = payload.ghl ?? {};\n\nreturn [\n  {\n    json: {\n      event: payload.event ?? 'ai_employee.lead_synced',\n      received_at: new Date().toISOString(),\n      employee_id: employee.id ?? null,\n      employee_name: employee.name ?? null,\n      employee_type: employee.type ?? null,\n      lead_id: lead.id ?? null,\n      lead_name: lead.name ?? null,\n      lead_email: lead.email ?? null,\n      lead_phone: lead.phone ?? null,\n      lead_status: lead.status ?? null,\n      service_needed: lead.service_needed ?? null,\n      ghl_contact_id: ghl.contactId ?? lead.ghl_contact_id ?? null,\n      ghl_opportunity_id: ghl.opportunityId ?? lead.ghl_opportunity_id ?? null,\n      next_step: lead.preferred_time ? 'appointment_requested' : lead.status === 'qualified' ? 'sales_review' : 'follow_up',\n      source_app: payload.source_app ?? 'OBMC AI Employees'\n    }\n  }\n];"
+      },
+      "id": "code-normalize-ai-employee-event",
+      "name": "Normalize AI Employee Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, workflow: 'Ai Employee OBMC', next_step: $json.next_step, lead_id: $json.lead_id, ghl_contact_id: $json.ghl_contact_id } }}",
+        "options": {}
+      },
+      "id": "respond-ai-employee-event",
+      "name": "Confirm Receipt",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Employee Lead Synced": {
+      "main": [
+        [
+          {
+            "node": "Normalize AI Employee Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize AI Employee Event": {
+      "main": [
+        [
+          {
+            "node": "Confirm Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ai-employee-obmc-local-template",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,108 @@
+{
+  "name": "Ai Employee OBMC - Lead Discovery Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-employee-obmc-lead-discovery-replace-with-private-uuid-before-activation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-lead-discovery-request",
+      "name": "Lead Discovery Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ],
+      "webhookId": "ai-employee-obmc-lead-discovery-template"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $json.body ?? $json;\nconst businessType = String(payload.business_type ?? payload.businessType ?? '').trim();\nconst serviceArea = String(payload.service_area ?? payload.serviceArea ?? '').trim();\nconst clientName = String(payload.client_name ?? payload.clientName ?? '').trim();\nconst keywords = Array.isArray(payload.keywords) ? payload.keywords.map(String).filter(Boolean) : [];\nconst requestedSources = Array.isArray(payload.sources) && payload.sources.length ? payload.sources.map(String) : ['web', 'reddit', 'forums', 'linkedin_manual', 'facebook_manual'];\n\nif (!businessType) {\n  throw new Error('business_type is required.');\n}\n\nconst safeSources = requestedSources.map((source) => {\n  const normalized = source.toLowerCase().replace(/\\s+/g, '_');\n  if (['linkedin', 'linkedin_scrape'].includes(normalized)) return 'linkedin_manual';\n  if (['facebook', 'facebook_scrape'].includes(normalized)) return 'facebook_manual';\n  return normalized;\n});\n\nconst baseTerms = [businessType, serviceArea, ...keywords].filter(Boolean).join(' ');\nconst jobs = safeSources.map((source) => {\n  const queryBySource = {\n    web: `${baseTerms} contact owner business needs`,\n    reddit: `site:reddit.com ${baseTerms} recommendations pain points`,\n    forums: `${baseTerms} forum recommendations problems business owner`,\n    linkedin_manual: `${baseTerms} LinkedIn company founder hiring growth`,\n    facebook_manual: `${baseTerms} Facebook group business recommendations`\n  };\n\n  return {\n    source,\n    mode: source.includes('manual') ? 'manual_or_official_api_only' : 'public_search_api',\n    query: queryBySource[source] ?? baseTerms,\n    compliance_note: source.includes('manual')\n      ? 'Do not scrape logged-in pages. Use official APIs, exports, or manual review.'\n      : 'Use public search APIs and respect robots.txt, rate limits, and source terms.',\n    desired_output: ['name', 'business_name', 'public_profile_url', 'reason_matched', 'source', 'confidence', 'recommended_next_step']\n  };\n});\n\nreturn [{\n  json: {\n    agent: 'OBMC Lead Discovery Agent',\n    client_name: clientName || null,\n    business_type: businessType,\n    service_area: serviceArea || null,\n    keywords,\n    jobs,\n    next_step: 'Connect a compliant search provider/API credential, then add source-specific fetch and scoring nodes.',\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-plan-lead-discovery",
+      "name": "Plan Lead Discovery Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $json.jobs ?? [];\nconst scoringRules = {\n  high: ['explicit need', 'hiring', 'asking for recommendations', 'recent complaint', 'clear business fit'],\n  medium: ['business type match', 'recent public activity', 'location match'],\n  reject: ['private profile only', 'no business relevance', 'no public contact path', 'restricted source']\n};\n\nreturn [{\n  json: {\n    ...$json,\n    scoring_rules: scoringRules,\n    output_policy: {\n      no_passworded_or_logged_in_scraping: true,\n      no_contact_enrichment_without_lawful_basis: true,\n      create_ghl_contact_only_after_review: true,\n      preserve_source_url: true\n    },\n    ready_for_fetch_nodes: jobs.length > 0\n  }\n}];"
+      },
+      "id": "code-score-policy",
+      "name": "Attach Scoring and Safety Policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, workflow: 'Ai Employee OBMC - Lead Discovery Agent', business_type: $json.business_type, service_area: $json.service_area, job_count: $json.jobs.length, jobs: $json.jobs, next_step: $json.next_step } }}",
+        "options": {}
+      },
+      "id": "respond-lead-discovery",
+      "name": "Return Lead Discovery Plan",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        200,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Discovery Request": {
+      "main": [
+        [
+          {
+            "node": "Plan Lead Discovery Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Lead Discovery Jobs": {
+      "main": [
+        [
+          {
+            "node": "Attach Scoring and Safety Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Scoring and Safety Policy": {
+      "main": [
+        [
+          {
+            "node": "Return Lead Discovery Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ai-employee-obmc-lead-discovery-local-template",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

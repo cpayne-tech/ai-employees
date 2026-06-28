@@ -39,9 +39,9 @@ export default async function AiEmployeesDashboardPage() {
   const discoveryComplete = discovery?.status === "discovered";
   const setupItems = [
     {
-      label: "Simulation provider",
-      ready: aiProvider.configured,
-      detail: aiProvider.configured ? aiProvider.provider : "Add API key later"
+      label: "Local simulation",
+      ready: true,
+      detail: aiProvider.configured ? `${aiProvider.provider} available` : "Ready without OpenAI"
     },
     {
       label: "GoHighLevel",
@@ -54,9 +54,14 @@ export default async function AiEmployeesDashboardPage() {
       detail: discovery?.status?.replaceAll("_", " ") ?? "not started"
     },
     {
-      label: "Gap analysis",
+      label: "Five-agent roster",
+      ready: configuredRoles.length === 5,
+      detail: `${configuredRoles.length} of 5 roles configured`
+    },
+    {
+      label: "Billing workflow",
       ready: discoveryComplete,
-      detail: discoveryComplete ? "Inventory evaluated" : "Blocked until discovery"
+      detail: discoveryComplete ? "Ready for manual sale flow" : "Confirm GHL map before live sale"
     }
   ];
   const setupReadyCount = setupItems.filter((item) => item.ready).length;
@@ -69,6 +74,8 @@ export default async function AiEmployeesDashboardPage() {
     <AppFrame
       actions={
         <>
+          <Link className="button secondary" href="/ai-employees/customer-preview">Customer view</Link>
+          <Link className="button secondary" href="/ai-employees/billing">Billing</Link>
           <Link className="button secondary" href="/ai-employees/onboarding">Create from wizard</Link>
           <Link className="button" href="/ai-employees/new">New AI Employee</Link>
         </>
@@ -81,14 +88,26 @@ export default async function AiEmployeesDashboardPage() {
           <div className="eyebrow">AI workforce rollout</div>
           <h2>{configuredRoles.length} of 5 roles configured</h2>
           <p>
-            Build the operating team first, run read-only GoHighLevel discovery, compare gaps,
-            then prepare safe AI Agent configuration packages.
+            Current build focus: configure the five-agent team, preview the customer workspace,
+            use local simulation, and keep GoHighLevel production changes review-first.
           </p>
         </div>
         <div className="hero-actions">
+          <Link className="button" href="/ai-employees/customer-preview">View customer side</Link>
+          <Link className="button secondary" href="/ai-employees/billing">Pricing workflow</Link>
           <Link className="button" href="/ai-employees/onboarding">Create from wizard</Link>
           <Link className="button" href="/ai-employees/employees">Manage roster</Link>
-          <Link className="button secondary" href="/ai-employees/settings">Setup status</Link>
+        </div>
+      </section>
+
+      <section className="product-lane-grid">
+        <div className="product-lane ready">
+          <span>Current build</span>
+          <strong>Local simulation, customer preview, GHL sync, billing workflow</strong>
+        </div>
+        <div className="product-lane future">
+          <span>Future build</span>
+          <strong>Optional LLM provider, lead discovery, deeper n8n workflows</strong>
         </div>
       </section>
 

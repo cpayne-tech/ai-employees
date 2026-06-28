@@ -2,10 +2,12 @@ import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { getAiProviderStatus } from "@/ai-employees/ai";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
+import { listGhlAiAgentProfiles } from "@/ai-employees/data/ghl-profiles";
 import { getGoHighLevelStatus } from "@/ai-employees/integrations/gohighlevel/client";
+import { getN8nStatus } from "@/ai-employees/integrations/n8n/client";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
-type BadgeState = "ready" | "needs-setup" | "not-connected";
+type BadgeState = "ready" | "needs-setup" | "not-connected" | "optional" | "under-development";
 
 export default async function AiEmployeesSettingsPage() {
   await requireAiEmployeesAccess();
@@ -15,8 +17,14 @@ export default async function AiEmployeesSettingsPage() {
   const ghlApiKeyConfigured = Boolean(process.env.GHL_API_KEY || process.env.GOHIGHLEVEL_API_KEY);
   const ghlLocationConfigured = Boolean(process.env.GHL_LOCATION_ID || process.env.GOHIGHLEVEL_LOCATION_ID);
   const ghlStatus = getGoHighLevelStatus();
+  const n8nStatus = getN8nStatus();
   const discovery = await getLatestGhlDiscoveryReport();
+  const ghlProfiles = await listGhlAiAgentProfiles({});
   const discoveryComplete = discovery?.status === "discovered";
+  const connectedProfiles = ghlProfiles.filter(
+    (profile) => profile.deployment_status === "connected"
+  ).length;
+  const fiveAgentsMapped = connectedProfiles >= 5;
 
   return (
     <AppFrame
@@ -34,12 +42,18 @@ export default async function AiEmployeesSettingsPage() {
           <div className="health-grid">
             <HealthCard label="Owner ID" ready={ownerExists} />
             <HealthCard label="Supabase" ready={supabaseConnected} />
-            <HealthCard label="Simulation Provider" ready={aiProvider.configured} />
+            <HealthCard label="Local Simulation" ready />
+            <HealthCard
+              label="Simulation (LLM)"
+              ready={aiProvider.configured}
+              stateWhenNotReady="optional"
+            />
             <HealthCard
               label="GoHighLevel"
               ready={ghlStatus === "ready_for_test"}
               stateWhenNotReady={ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
             />
+            <HealthCard label="Lead Generation" ready={false} stateWhenNotReady="under-development" />
           </div>
         </section>
 
@@ -57,10 +71,14 @@ export default async function AiEmployeesSettingsPage() {
               <ChecklistItem ready={ownerExists} text="AI employee owner configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_ADMIN_PASSWORD)} text="Admin password configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_SESSION_SECRET)} text="Session secret configured" />
-              <ChecklistItem ready={aiProvider.configured} text="Simulation provider key configured" />
+              <ChecklistItem ready text="Local simulation engine available without OpenAI" />
+              <ChecklistItem ready={aiProvider.configured} state={aiProvider.configured ? "ready" : "optional"} text="Simulation (LLM) provider key configured" />
               <ChecklistItem ready={ghlApiKeyConfigured} text="GoHighLevel API key configured" />
               <ChecklistItem ready={ghlLocationConfigured} text="GoHighLevel location ID configured" />
               <ChecklistItem ready={discoveryComplete} text="GoHighLevel read-only discovery completed" />
+              <ChecklistItem ready={n8nStatus.leadSync === "ready"} text="n8n lead-sync webhook configured" />
+              <ChecklistItem ready={n8nStatus.purchaseWebhook === "ready"} state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} text="n8n purchase webhook configured" />
+              <ChecklistItem ready={false} state="under-development" text="Lead generation and discovery agent" />
             </ul>
           </section>
 
@@ -73,7 +91,8 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <div className="record-list">
-                <IntegrationRow label="Simulation Provider" state={aiProvider.configured ? "ready" : "needs-setup"} />
+                <IntegrationRow label="Local simulation engine" state="ready" />
+                <IntegrationRow label="Simulation (LLM) provider" state={aiProvider.configured ? "ready" : "optional"} />
                 <IntegrationRow
                   label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
                   state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
@@ -81,6 +100,9 @@ export default async function AiEmployeesSettingsPage() {
                 <IntegrationRow label={`GHL Discovery (${discovery?.status?.replaceAll("_", " ") ?? "not started"})`} state={discoveryComplete ? "ready" : "needs-setup"} />
                 <IntegrationRow label="Calendar inventory" state={discoveryComplete ? "ready" : "not-connected"} />
                 <IntegrationRow label="SMS/email inventory" state={discoveryComplete ? "ready" : "not-connected"} />
+                <IntegrationRow label={`n8n lead sync (${n8nStatus.leadSync.replaceAll("_", " ")})`} state={n8nStatus.leadSync === "ready" ? "ready" : "not-connected"} />
+                <IntegrationRow label={`n8n purchase webhook (${n8nStatus.purchaseWebhook.replaceAll("_", " ")})`} state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} />
+                <IntegrationRow label="Lead discovery and scraping" state="under-development" />
               </div>
             </section>
 
@@ -92,11 +114,11 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <ol className="next-steps">
-                <li>Complete read-only GoHighLevel discovery</li>
-                <li>Build the inventory of existing production resources</li>
-                <li>Compare inventory against AI Employee OS requirements</li>
-                <li>Reuse existing resources wherever equivalent assets exist</li>
-                <li>Create only missing namespaced resources after explicit approval</li>
+                <li>Finish the customer-facing workspace preview</li>
+                <li>Confirm pricing and purchase activation workflow</li>
+                <li>Create the five AI employees through onboarding</li>
+                <li>Map the five AI employees to existing GHL calendars and pipeline stages</li>
+                <li>Use manual lead sync from the lead detail page for production-safe CRM writes</li>
               </ol>
             </section>
           </div>
@@ -111,13 +133,16 @@ export default async function AiEmployeesSettingsPage() {
           </div>
           <div className="integration-card-grid">
             <IntegrationCard title="GoHighLevel Discovery" text="Read-only inventory must be completed before creating or editing anything." state={discoveryComplete ? "ready" : "needs-setup"} />
-            <IntegrationCard title="GoHighLevel Native AI Agents" text="Primary execution layer after existing AI features are inventoried." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Conversations" text="Conversation channels must be discovered before reuse or setup." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Workflows" text="Workflow logic remains untouched unless explicitly approved." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Calendar" text="Calendar mapping waits for existing calendar inventory." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Pipelines" text="Pipeline and stage mapping waits for existing pipeline inventory." state="needs-setup" />
-            <IntegrationCard title="n8n Optional Middleware" text="Optional middleware for advanced automation." state="not-connected" />
-            <IntegrationCard title="Simulation Provider" text="Used only to test prompts and behavior before safe GoHighLevel configuration." state={aiProvider.configured ? "ready" : "needs-setup"} />
+            <IntegrationCard title="API-backed GoHighLevel Sync" text="Manual lead sync creates or updates a GHL contact, note, tags, and mapped opportunity." state={fiveAgentsMapped && ghlStatus === "ready_for_test" ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Native AI Agents" text="Profiles are mapped for the five agents; native GHL agent IDs are added after each agent is created inside GHL." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Conversations" text="Conversation output is captured in this app and sent to GHL as contact notes during manual sync." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Workflows" text="Workflow triggers are documented in each profile; existing workflows remain untouched." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Calendar" text="All five employees are mapped to reusable OBMC calendars." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Pipelines" text="All five employees are mapped to reusable Agentic Development pipeline stages." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="n8n Lead Sync Orchestration" text="Receives AI Employee lead-synced events after successful GoHighLevel sync when the webhook is configured." state={n8nStatus.leadSync === "ready" ? "ready" : "not-connected"} />
+            <IntegrationCard title="n8n Purchase Orchestration" text="Optional downstream notification after Stripe purchase records are safely stored in the app." state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} />
+            <IntegrationCard title="Lead Generation" text="Future module for compliant discovery. It is not part of the current build." state="under-development" />
+            <IntegrationCard title="Simulation (LLM) Provider" text="Optional upgrade for richer internal simulation. The current build works with the local simulation engine." state={aiProvider.configured ? "ready" : "optional"} />
           </div>
         </section>
       </div>
@@ -135,21 +160,35 @@ function HealthCard({
   stateWhenNotReady?: Exclude<BadgeState, "ready">;
 }) {
   const state = ready ? "ready" : stateWhenNotReady;
+  const notReadyLabel = {
+    "needs-setup": "Needs setup",
+    "not-connected": "Not connected",
+    optional: "Optional",
+    "under-development": "Under development"
+  }[stateWhenNotReady];
 
   return (
     <div className="health-card">
       <span>{label}</span>
-      <strong>{ready ? "Ready" : stateWhenNotReady === "not-connected" ? "Not connected" : "Needs setup"}</strong>
+      <strong>{ready ? "Ready" : notReadyLabel}</strong>
       <SetupBadge state={state} />
     </div>
   );
 }
 
-function ChecklistItem({ ready, text }: { ready: boolean; text: string }) {
+function ChecklistItem({
+  ready,
+  state,
+  text
+}: {
+  ready: boolean;
+  state?: BadgeState;
+  text: string;
+}) {
   return (
     <li>
       <span>{text}</span>
-      <SetupBadge state={ready ? "ready" : "needs-setup"} />
+      <SetupBadge state={state ?? (ready ? "ready" : "needs-setup")} />
     </li>
   );
 }
@@ -185,9 +224,11 @@ function IntegrationCard({
 
 function SetupBadge({ state }: { state: BadgeState }) {
   const label = {
+    optional: "Optional",
     ready: "Ready",
     "needs-setup": "Needs setup",
-    "not-connected": "Not connected"
+    "not-connected": "Not connected",
+    "under-development": "Under development"
   }[state];
 
   return <span className={`setup-badge ${state}`}>{label}</span>;
