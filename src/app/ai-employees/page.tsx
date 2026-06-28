@@ -1,177 +1,155 @@
 import Link from "next/link";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { DataCard } from "@/ai-employees/components/data-card";
+import { EmptyState } from "@/ai-employees/components/empty-state";
+import { StatCard } from "@/ai-employees/components/stat-card";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
-import { listAiEmployees } from "@/ai-employees/data/repository";
-import type { AiEmployeeStatus, AiEmployeeType } from "@/ai-employees/types";
+import {
+  listAiEmployees,
+  listConversations,
+  listEscalations,
+  listLeads
+} from "@/ai-employees/data/repository";
 
-const statusOptions: Array<AiEmployeeStatus | "all"> = [
-  "all",
-  "draft",
-  "active",
-  "paused",
-  "archived"
-];
-
-const typeOptions: Array<AiEmployeeType | "all"> = [
-  "all",
-  "AI Receptionist / Appointment Setter",
-  "AI Website Concierge",
-  "AI Lead Qualifier",
-  "AI Customer Support Agent"
-];
-
-export default async function AiEmployeesPage({
-  searchParams
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function AiEmployeesDashboardPage() {
   await requireAiEmployeesAccess();
-  const query = await searchParams;
-  const status = stringParam(query.status);
-  const type = stringParam(query.type);
-  const search = stringParam(query.search);
-  const includeArchived = stringParam(query.includeArchived) === "1" || status === "archived";
-  const employees = await listAiEmployees({
-    status,
-    type,
-    search,
-    includeArchived
-  });
+  const [employees, leads, conversations, escalations] = await Promise.all([
+    listAiEmployees({ includeArchived: true }),
+    listLeads(),
+    listConversations(),
+    listEscalations({ status: "open" })
+  ]);
+
+  const visibleEmployees = employees.filter((employee) => employee.status !== "archived");
   const totals = employees.reduce(
     (summary, employee) => ({
-      leads: summary.leads + employee.total_leads,
-      conversations: summary.conversations + employee.total_conversations,
       appointments: summary.appointments + employee.total_appointments,
-      escalations: summary.escalations + employee.total_escalations
+      conversations: summary.conversations + employee.total_conversations,
+      escalations: summary.escalations + employee.total_escalations,
+      leads: summary.leads + employee.total_leads
     }),
-    { leads: 0, conversations: 0, appointments: 0, escalations: 0 }
+    { appointments: 0, conversations: 0, escalations: 0, leads: 0 }
   );
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">AI employee dashboard</div>
-          <h1>Manage AI employees</h1>
-          <p className="muted">
-            Receptionist and appointment-setting systems for small businesses.
-          </p>
-        </div>
-        <Link href="/ai-employees/new" className="button">
-          Create new AI employee
-        </Link>
-      </div>
-
+    <AppFrame
+      actions={<Link className="button" href="/ai-employees/new">New AI Employee</Link>}
+      subtitle="Manage AI employees, captured leads, conversations, and automation activity."
+      title="Dashboard"
+    >
       <section className="grid stats-grid" aria-label="AI employee totals">
-        <Stat label="Leads captured" value={totals.leads} />
-        <Stat label="Conversations" value={totals.conversations} />
-        <Stat label="Appointments requested" value={totals.appointments} />
-        <Stat label="Escalations" value={totals.escalations} />
+        <StatCard label="Total AI Employees" value={visibleEmployees.length} />
+        <StatCard label="Active AI Employees" value={employees.filter((employee) => employee.status === "active").length} />
+        <StatCard label="Total Leads" value={totals.leads} />
+        <StatCard label="Total Conversations" value={totals.conversations} />
+        <StatCard label="Appointment Requests" value={totals.appointments} />
+        <StatCard label="Open Escalations" value={escalations.length} />
       </section>
 
-      <form className="card filters-bar">
-        <div className="field">
-          <label htmlFor="search">Search</label>
-          <input id="search" name="search" defaultValue={search} placeholder="Employee or business name" />
-        </div>
-        <div className="field">
-          <label htmlFor="status">Status</label>
-          <select id="status" name="status" defaultValue={status || "all"}>
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="type">Employee type</label>
-          <select id="type" name="type" defaultValue={type || "all"}>
-            {typeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        </div>
-        <label className="check-row">
-          <input name="includeArchived" type="checkbox" value="1" defaultChecked={includeArchived} />
-          Show archived
-        </label>
-        <button className="button secondary" type="submit">Apply filters</button>
-      </form>
+      <div className="dashboard-grid">
+        <DataCard
+          description="Most recently created or updated employee records."
+          title="Recent AI Employees"
+          viewAllHref="/ai-employees/employees"
+        >
+          {employees.length ? (
+            <div className="record-list">
+              {employees.slice(0, 5).map((employee) => (
+                <Link className="record-row" href={`/ai-employees/${employee.id}`} key={employee.id}>
+                  <div>
+                    <strong>{employee.name}</strong>
+                    <p className="muted">{employee.type} - {employee.business_name}</p>
+                  </div>
+                  <StatusBadge status={employee.status} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              actionHref="/ai-employees/new"
+              actionLabel="Create AI employee"
+              description="Create your first generic AI employee to start testing the workflow."
+              title="No AI employees yet"
+            />
+          )}
+        </DataCard>
 
-      <section style={{ marginTop: 18 }}>
-        {employees.length ? (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Assigned business</th>
-                  <th>Leads</th>
-                  <th>Conversations</th>
-                  <th>Appointments</th>
-                  <th>Last active</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.id}>
-                    <td>
-                      <strong>{employee.name}</strong>
-                    </td>
-                    <td>{employee.type}</td>
-                    <td>
-                      <StatusBadge status={employee.status} />
-                    </td>
-                    <td>{employee.business_name}</td>
-                    <td>{employee.total_leads}</td>
-                    <td>{employee.total_conversations}</td>
-                    <td>{employee.total_appointments}</td>
-                    <td>
-                      {employee.last_active_at
-                        ? new Date(employee.last_active_at).toLocaleString()
-                        : "No activity"}
-                    </td>
-                    <td>
-                      <div className="button-row">
-                        <Link className="button secondary" href={`/ai-employees/${employee.id}`}>
-                        View details
-                        </Link>
-                        <Link className="button secondary" href={`/ai-employees/${employee.id}/test`}>
-                          Test
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="card empty-state">
-            <h2>No AI employees yet</h2>
-            <p className="muted">Create a generic employee or adjust the filters to include archived records.</p>
-            <Link href="/ai-employees/new" className="button">
-              Create new AI employee
-            </Link>
-          </div>
-        )}
-      </section>
+        <DataCard
+          description="Newest leads captured by test or live conversations."
+          title="Recent Leads"
+          viewAllHref="/ai-employees/leads"
+        >
+          {leads.length ? (
+            <div className="record-list">
+              {leads.slice(0, 5).map((lead) => (
+                <Link className="record-row" href={`/ai-employees/leads/${lead.id}`} key={lead.id}>
+                  <div>
+                    <strong>{lead.name ?? lead.phone ?? lead.email ?? "Unknown lead"}</strong>
+                    <p className="muted">{lead.service_needed ?? "Service not captured"}</p>
+                  </div>
+                  <span className="record-meta">{lead.status}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description="Leads will appear here as test or live conversations capture contact details."
+              title="No leads captured"
+            />
+          )}
+        </DataCard>
+
+        <DataCard
+          description="Recent transcripts from AI employee interactions."
+          title="Recent Conversations"
+          viewAllHref="/ai-employees/conversations"
+        >
+          {conversations.length ? (
+            <div className="record-list">
+              {conversations.slice(0, 5).map((conversation) => (
+                <Link className="record-row" href={`/ai-employees/conversations/${conversation.id}`} key={conversation.id}>
+                  <div>
+                    <strong>{conversation.visitor_name ?? conversation.extracted_lead.name ?? "Unknown visitor"}</strong>
+                    <p className="muted">{conversation.summary ?? "No summary yet"}</p>
+                  </div>
+                  <span className="record-meta">{conversation.mode}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description="Test chat transcripts and future live conversations will show here."
+              title="No conversations yet"
+            />
+          )}
+        </DataCard>
+
+        <DataCard
+          description="Open items waiting for human review."
+          title="Recent Escalations"
+          viewAllHref="/ai-employees/escalations"
+        >
+          {escalations.length ? (
+            <div className="record-list">
+              {escalations.slice(0, 5).map((escalation) => (
+                <div className="record-row" key={escalation.id}>
+                  <div>
+                    <strong>{escalation.reason}</strong>
+                    <p className="muted">{escalation.message}</p>
+                  </div>
+                  <span className="record-meta">{escalation.status}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description="Escalations will appear when an AI employee flags an item for review."
+              title="No open escalations"
+            />
+          )}
+        </DataCard>
+      </div>
     </AppFrame>
-  );
-}
-
-function stringParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="card stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }

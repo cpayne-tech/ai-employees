@@ -19,14 +19,11 @@ export default async function ConversationsPage({
   ]);
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Conversation review</div>
-          <h1>Conversations</h1>
-          <p className="muted">Review transcripts, extracted leads, appointments, and escalations.</p>
-        </div>
-      </div>
+    <AppFrame
+      eyebrow="Conversation review"
+      subtitle="Review transcripts, extracted leads, appointments, and escalations."
+      title="Conversations"
+    >
 
       <form className="card filters-bar">
         <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />

@@ -17,14 +17,11 @@ export default async function EscalationsPage({
   ]);
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Human review queue</div>
-          <h1>Escalations</h1>
-          <p className="muted">Items the AI employee marked for human review.</p>
-        </div>
-      </div>
+    <AppFrame
+      eyebrow="Human review queue"
+      subtitle="Items the AI employee marked for human review."
+      title="Escalations"
+    >
 
       <form className="card filters-bar">
         <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />

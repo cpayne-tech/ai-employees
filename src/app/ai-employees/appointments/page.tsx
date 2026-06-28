@@ -17,14 +17,11 @@ export default async function AppointmentsPage({
   ]);
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Calendar queue</div>
-          <h1>Appointments</h1>
-          <p className="muted">Requested appointments. Calendar confirmation is intentionally not connected yet.</p>
-        </div>
-      </div>
+    <AppFrame
+      eyebrow="Calendar queue"
+      subtitle="Requested appointments. Calendar confirmation is intentionally not connected yet."
+      title="Appointments"
+    >
 
       <form className="card filters-bar">
         <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />

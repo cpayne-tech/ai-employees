@@ -89,7 +89,7 @@ export function EmployeeForm({
       </section>
       <div className="button-row" style={{ marginTop: 18 }}>
         <SubmitButton label={submitLabel} />
-        <Link href={employee ? `/ai-employees/${employee.id}` : "/ai-employees"} className="button secondary">
+        <Link href={employee ? `/ai-employees/${employee.id}` : "/ai-employees/employees"} className="button secondary">
           Cancel
         </Link>
       </div>

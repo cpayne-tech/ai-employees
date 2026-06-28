@@ -19,14 +19,11 @@ export default async function LeadsPage({
   ]);
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Captured demand</div>
-          <h1>Leads</h1>
-          <p className="muted">All lead records captured by AI employees.</p>
-        </div>
-      </div>
+    <AppFrame
+      eyebrow="Captured demand"
+      subtitle="All lead records captured by AI employees."
+      title="Leads"
+    >
 
       <form className="card filters-bar">
         <Select label="Employee" name="employee" value={employeeId} options={employees.map((employee) => [employee.id, employee.name])} />

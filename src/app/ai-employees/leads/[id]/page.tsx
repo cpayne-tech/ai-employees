@@ -18,15 +18,12 @@ export default async function LeadDetailPage({
   }
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Lead detail</div>
-          <h1>{detail.lead.name ?? "Unknown lead"}</h1>
-          <p className="muted">{detail.lead.ai_employees?.name ?? "Unknown employee"}</p>
-        </div>
-        <Link className="button secondary" href="/ai-employees/leads">Back to leads</Link>
-      </div>
+    <AppFrame
+      actions={<Link className="button secondary" href="/ai-employees/leads">Back to leads</Link>}
+      eyebrow="Lead detail"
+      subtitle={detail.lead.ai_employees?.name ?? "Unknown employee"}
+      title={detail.lead.name ?? "Unknown lead"}
+    >
 
       <div className="grid two-column-grid">
         <section className="card">

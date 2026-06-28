@@ -26,15 +26,9 @@ export default async function AiEmployeeProfilePage({
   const { employee } = detail;
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">AI employee profile</div>
-          <h1>{employee.name}</h1>
-          <p className="muted">{employee.type} for {employee.business_name}</p>
-          <StatusBadge status={employee.status} />
-        </div>
-        <div className="button-row">
+    <AppFrame
+      actions={
+        <>
           <Link href={`/ai-employees/${employee.id}/edit`} className="button secondary">
             Edit settings
           </Link>
@@ -55,7 +49,14 @@ export default async function AiEmployeeProfilePage({
               {employee.name === "OBMC Website Concierge" ? "Archive test employee" : "Archive"}
             </button>
           </form>
-        </div>
+        </>
+      }
+      eyebrow="AI employee profile"
+      subtitle={`${employee.type} for ${employee.business_name}`}
+      title={employee.name}
+    >
+      <div className="button-row" style={{ marginBottom: 18 }}>
+        <StatusBadge status={employee.status} />
       </div>
 
       <section className="grid stats-grid">

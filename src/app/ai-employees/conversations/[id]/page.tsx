@@ -18,15 +18,12 @@ export default async function ConversationDetailPage({
   }
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Conversation detail</div>
-          <h1>{detail.conversation.visitor_name ?? "Unknown visitor"}</h1>
-          <p className="muted">{detail.conversation.ai_employees?.name ?? "Unknown employee"} - {detail.conversation.mode}</p>
-        </div>
-        <Link className="button secondary" href="/ai-employees/conversations">Back to conversations</Link>
-      </div>
+    <AppFrame
+      actions={<Link className="button secondary" href="/ai-employees/conversations">Back to conversations</Link>}
+      eyebrow="Conversation detail"
+      subtitle={`${detail.conversation.ai_employees?.name ?? "Unknown employee"} - ${detail.conversation.mode}`}
+      title={detail.conversation.visitor_name ?? "Unknown visitor"}
+    >
 
       <div className="grid two-column-grid">
         <section className="card">

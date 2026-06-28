@@ -21,14 +21,11 @@ export default async function EditAiEmployeePage({
   const action = updateAiEmployeeAction.bind(null, detail.employee.id);
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Edit settings</div>
-          <h1>{detail.employee.name}</h1>
-          <p className="muted">{detail.employee.business_name}</p>
-        </div>
-      </div>
+    <AppFrame
+      eyebrow="Edit settings"
+      subtitle={detail.employee.business_name}
+      title={detail.employee.name}
+    >
       <EmployeeForm action={action} employee={detail.employee} submitLabel="Save settings" />
     </AppFrame>
   );

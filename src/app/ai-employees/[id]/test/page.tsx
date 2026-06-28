@@ -23,22 +23,23 @@ export default async function TestAiEmployeePage({
   const provider = getAiProviderStatus();
 
   return (
-    <AppFrame>
-      <div className="page-header">
-        <div>
-          <div className="eyebrow">Test mode</div>
-          <h1>{detail.employee.name}</h1>
-          <p className="muted">{detail.employee.type} for {detail.employee.business_name}</p>
-          <StatusBadge status={detail.employee.status} />
-        </div>
-        <div className="button-row">
+    <AppFrame
+      actions={
+        <>
           <Link href={`/ai-employees/${detail.employee.id}`} className="button secondary">
             Back to details
           </Link>
           <Link href={`/ai-employees/${detail.employee.id}/edit`} className="button secondary">
             Edit config
           </Link>
-        </div>
+        </>
+      }
+      eyebrow="Test mode"
+      subtitle={`${detail.employee.type} for ${detail.employee.business_name}`}
+      title={detail.employee.name}
+    >
+      <div className="button-row" style={{ marginBottom: 18 }}>
+        <StatusBadge status={detail.employee.status} />
       </div>
 
       {!provider.configured ? (
