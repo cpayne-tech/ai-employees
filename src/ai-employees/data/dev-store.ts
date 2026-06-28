@@ -6,7 +6,8 @@ import type {
   AiEmployeeConversation,
   AiEmployeeEscalation,
   AiEmployeeLead,
-  GhlAiAgentProfile
+  GhlAiAgentProfile,
+  GhlDiscoveryReport
 } from "@/ai-employees/types";
 
 export type DevStore = {
@@ -16,6 +17,7 @@ export type DevStore = {
   appointments: AiEmployeeAppointment[];
   escalations: AiEmployeeEscalation[];
   ghlProfiles: GhlAiAgentProfile[];
+  ghlDiscoveryReports: GhlDiscoveryReport[];
 };
 
 const storePath = path.join(process.cwd(), ".data", "ai-employees.json");
@@ -26,7 +28,8 @@ const emptyStore = (): DevStore => ({
   leads: [],
   appointments: [],
   escalations: [],
-  ghlProfiles: []
+  ghlProfiles: [],
+  ghlDiscoveryReports: []
 });
 
 export async function readDevStore(): Promise<DevStore> {
@@ -40,7 +43,8 @@ export async function readDevStore(): Promise<DevStore> {
       leads: parsed.leads ?? [],
       appointments: parsed.appointments ?? [],
       escalations: parsed.escalations ?? [],
-      ghlProfiles: parsed.ghlProfiles ?? []
+      ghlProfiles: parsed.ghlProfiles ?? [],
+      ghlDiscoveryReports: parsed.ghlDiscoveryReports ?? []
     };
   } catch {
     const fresh = emptyStore();

@@ -600,6 +600,42 @@ h3 {
   font-size: 12px;
 }
 
+.resource-list,
+.metric-list {
+  display: grid;
+  gap: 10px;
+}
+
+.resource-row,
+.metric-row,
+.detail-row {
+  background: var(--surface-2);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  min-height: 58px;
+  padding: 12px;
+}
+
+.metric-row,
+.detail-row {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.resource-row span,
+.metric-row span,
+.detail-row span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.full-button {
+  margin-top: 14px;
+  width: 100%;
+}
+
 .text-link {
   color: var(--brand-dark);
   font-weight: 800;

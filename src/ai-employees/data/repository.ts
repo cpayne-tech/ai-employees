@@ -686,7 +686,7 @@ function summarizeTranscript(transcript: TranscriptMessage[]) {
     .join(" ");
 
   if (!visitorMessages) {
-    return "Test conversation started.";
+    return "Internal simulation started.";
   }
 
   return visitorMessages.slice(0, 220);

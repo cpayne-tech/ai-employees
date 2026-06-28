@@ -12,17 +12,19 @@ import {
   listEscalations,
   listLeads
 } from "@/ai-employees/data/repository";
+import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
 import { listGhlAiAgentProfiles } from "@/ai-employees/data/ghl-profiles";
 import { aiEmployeeRoleBlueprints } from "@/ai-employees/role-blueprints";
 
 export default async function AiEmployeesDashboardPage() {
   await requireAiEmployeesAccess();
-  const [employees, leads, conversations, escalations, ghlProfiles] = await Promise.all([
+  const [employees, leads, conversations, escalations, ghlProfiles, discovery] = await Promise.all([
     listAiEmployees({ includeArchived: true }),
     listLeads(),
     listConversations(),
     listEscalations({ status: "open" }),
-    listGhlAiAgentProfiles()
+    listGhlAiAgentProfiles(),
+    getLatestGhlDiscoveryReport()
   ]);
   const aiProvider = getAiProviderStatus();
   const visibleEmployees = employees.filter((employee) => employee.status !== "archived");
@@ -34,6 +36,7 @@ export default async function AiEmployeesDashboardPage() {
     (count, employee) => count + employee.total_appointments,
     0
   );
+  const discoveryComplete = discovery?.status === "discovered";
   const setupItems = [
     {
       label: "Simulation provider",
@@ -46,14 +49,14 @@ export default async function AiEmployeesDashboardPage() {
       detail: "Credentials pending"
     },
     {
-      label: "Calendar",
-      ready: false,
-      detail: "Not connected"
+      label: "GHL discovery",
+      ready: discoveryComplete,
+      detail: discovery?.status?.replaceAll("_", " ") ?? "not started"
     },
     {
-      label: "GoHighLevel Deployment",
-      ready: false,
-      detail: "Native GHL setup pending"
+      label: "Gap analysis",
+      ready: discoveryComplete,
+      detail: discoveryComplete ? "Inventory evaluated" : "Blocked until discovery"
     }
   ];
   const setupReadyCount = setupItems.filter((item) => item.ready).length;
@@ -70,7 +73,7 @@ export default async function AiEmployeesDashboardPage() {
           <Link className="button" href="/ai-employees/new">New AI Employee</Link>
         </>
       }
-      subtitle="A GoHighLevel-native control center for AI Employees that are configured, simulated, exported, and deployed into GHL."
+      subtitle="A GoHighLevel-native control center for AI Employees with discovery-first production safety."
       title="Dashboard"
     >
       <section className="dashboard-hero">
@@ -78,8 +81,8 @@ export default async function AiEmployeesDashboardPage() {
           <div className="eyebrow">AI workforce rollout</div>
           <h2>{configuredRoles.length} of 5 roles configured</h2>
           <p>
-            Build the operating team first, create GHL AI Agent profiles, run Internal Simulation,
-            then export the configuration into GoHighLevel.
+            Build the operating team first, run read-only GoHighLevel discovery, compare gaps,
+            then prepare safe AI Agent configuration packages.
           </p>
         </div>
         <div className="hero-actions">
@@ -194,7 +197,7 @@ export default async function AiEmployeesDashboardPage() {
               <AttentionItem
                 count={setupItems.length - setupReadyCount}
                 href="/ai-employees/gohighlevel"
-                label="GoHighLevel deployment items still need setup"
+                label="GoHighLevel discovery and gap-analysis items need review"
               />
               <AttentionItem
                 count={escalations.length}

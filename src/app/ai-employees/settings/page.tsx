@@ -1,6 +1,7 @@
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { getAiProviderStatus } from "@/ai-employees/ai";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
 import { getGoHighLevelStatus } from "@/ai-employees/integrations/gohighlevel/client";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
@@ -14,6 +15,8 @@ export default async function AiEmployeesSettingsPage() {
   const ghlApiKeyConfigured = Boolean(process.env.GHL_API_KEY || process.env.GOHIGHLEVEL_API_KEY);
   const ghlLocationConfigured = Boolean(process.env.GHL_LOCATION_ID || process.env.GOHIGHLEVEL_LOCATION_ID);
   const ghlStatus = getGoHighLevelStatus();
+  const discovery = await getLatestGhlDiscoveryReport();
+  const discoveryComplete = discovery?.status === "discovered";
 
   return (
     <AppFrame
@@ -57,6 +60,7 @@ export default async function AiEmployeesSettingsPage() {
               <ChecklistItem ready={aiProvider.configured} text="Simulation provider key configured" />
               <ChecklistItem ready={ghlApiKeyConfigured} text="GoHighLevel API key configured" />
               <ChecklistItem ready={ghlLocationConfigured} text="GoHighLevel location ID configured" />
+              <ChecklistItem ready={discoveryComplete} text="GoHighLevel read-only discovery completed" />
             </ul>
           </section>
 
@@ -74,9 +78,9 @@ export default async function AiEmployeesSettingsPage() {
                   label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
                   state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
                 />
-                <IntegrationRow label="Calendar" state="not-connected" />
-                <IntegrationRow label="SMS" state="not-connected" />
-                <IntegrationRow label="Email" state="not-connected" />
+                <IntegrationRow label={`GHL Discovery (${discovery?.status?.replaceAll("_", " ") ?? "not started"})`} state={discoveryComplete ? "ready" : "needs-setup"} />
+                <IntegrationRow label="Calendar inventory" state={discoveryComplete ? "ready" : "not-connected"} />
+                <IntegrationRow label="SMS/email inventory" state={discoveryComplete ? "ready" : "not-connected"} />
               </div>
             </section>
 
@@ -84,15 +88,15 @@ export default async function AiEmployeesSettingsPage() {
               <div className="section-header">
                 <div>
                   <h2>Next Setup Steps</h2>
-                  <p className="muted">Recommended order before public launch.</p>
+              <p className="muted">Recommended order before any production GoHighLevel change.</p>
                 </div>
               </div>
               <ol className="next-steps">
-                <li>Create GoHighLevel AI Agent profiles</li>
-                <li>Add GoHighLevel credentials</li>
-                <li>Map workflow triggers, pipeline stages, and calendars</li>
-                <li>Run Internal Simulation before export</li>
-                <li>Configure the native GoHighLevel AI Agent</li>
+                <li>Complete read-only GoHighLevel discovery</li>
+                <li>Build the inventory of existing production resources</li>
+                <li>Compare inventory against AI Employee OS requirements</li>
+                <li>Reuse existing resources wherever equivalent assets exist</li>
+                <li>Create only missing namespaced resources after explicit approval</li>
               </ol>
             </section>
           </div>
@@ -106,13 +110,14 @@ export default async function AiEmployeesSettingsPage() {
             </div>
           </div>
           <div className="integration-card-grid">
-            <IntegrationCard title="GoHighLevel Native AI Agents" text="Primary execution layer for AI Employees." state="ready" />
-            <IntegrationCard title="GoHighLevel Conversations" text="Native GHL conversation channels receive and manage messages." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Workflows" text="Workflow triggers route lead capture, qualification, follow-up, and handoff events." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Calendar" text="Calendar mapping prepares appointment requests without confirming unavailable times." state="needs-setup" />
-            <IntegrationCard title="GoHighLevel Pipelines" text="Pipeline mapping prepares opportunity stages for AI Employee outcomes." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Discovery" text="Read-only inventory must be completed before creating or editing anything." state={discoveryComplete ? "ready" : "needs-setup"} />
+            <IntegrationCard title="GoHighLevel Native AI Agents" text="Primary execution layer after existing AI features are inventoried." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Conversations" text="Conversation channels must be discovered before reuse or setup." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Workflows" text="Workflow logic remains untouched unless explicitly approved." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Calendar" text="Calendar mapping waits for existing calendar inventory." state="needs-setup" />
+            <IntegrationCard title="GoHighLevel Pipelines" text="Pipeline and stage mapping waits for existing pipeline inventory." state="needs-setup" />
             <IntegrationCard title="n8n Optional Middleware" text="Optional middleware for advanced automation." state="not-connected" />
-            <IntegrationCard title="Simulation Provider" text="Used only to test prompts and behavior before GoHighLevel deployment." state={aiProvider.configured ? "ready" : "needs-setup"} />
+            <IntegrationCard title="Simulation Provider" text="Used only to test prompts and behavior before safe GoHighLevel configuration." state={aiProvider.configured ? "ready" : "needs-setup"} />
           </div>
         </section>
       </div>

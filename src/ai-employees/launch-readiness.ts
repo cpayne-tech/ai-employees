@@ -38,7 +38,7 @@ export function getEmployeeLaunchReadiness(
     { label: "Simulation provider configured", state: aiProviderConfigured ? "ready" : "needs-setup" },
     { label: "Internal Simulation completed", state: testConversation ? "ready" : "needs-setup" },
     { label: "Lead extraction verified", state: leadExtractionVerified ? "ready" : "needs-setup" },
-    { label: "GoHighLevel Deployment", state: "not-connected" },
+    { label: "GoHighLevel discovery completed", state: "not-connected" },
     {
       label: "GoHighLevel",
       state: employee.ghl_enabled ? "needs-setup" : "not-connected"
@@ -81,7 +81,7 @@ function readinessLabel(input: {
     return "Ready for internal testing";
   }
   if (!input.employeeGhlEnabled) {
-    return "Ready for GoHighLevel profile";
+    return "Ready for discovery review";
   }
-  return "Ready for GoHighLevel integration";
+  return "Ready for safe GoHighLevel integration plan";
 }

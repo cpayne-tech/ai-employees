@@ -6,6 +6,58 @@ export type GhlDeploymentStatus =
   | "connected"
   | "needs_update";
 
+export type GhlDiscoveryStatus =
+  | "not_started"
+  | "in_progress"
+  | "discovered"
+  | "blocked"
+  | "needs_review";
+
+export type GhlResourceType =
+  | "agency"
+  | "location"
+  | "phone_number"
+  | "email_provider"
+  | "calendar"
+  | "calendar_group"
+  | "pipeline"
+  | "pipeline_stage"
+  | "custom_field"
+  | "tag"
+  | "smart_list"
+  | "workflow"
+  | "workflow_folder"
+  | "form"
+  | "survey"
+  | "ai_agent"
+  | "conversation_ai"
+  | "voice_ai"
+  | "conversation_channel"
+  | "ai_setting"
+  | "unknown";
+
+export type GhlDiscoveredResource = {
+  name: string;
+  type: GhlResourceType;
+  resource_id: string | null;
+  status: string | null;
+  purpose: string | null;
+  used_by: string | null;
+  notes: string | null;
+};
+
+export type GhlGapStatus = "existing" | "missing" | "unknown" | "conflict" | "skipped";
+
+export type GhlGapAnalysisItem = {
+  requirement: string;
+  resource_type: GhlResourceType;
+  status: GhlGapStatus;
+  existing_resource_id: string | null;
+  reusable_resource_name: string | null;
+  recommended_action: string;
+  notes: string | null;
+};
+
 export type AiEmployeeType =
   | "AI Receptionist / Appointment Setter"
   | "AI Website Concierge"
@@ -103,6 +155,22 @@ export type GhlAiAgentProfileInput = Omit<
 > & {
   id?: string;
   last_exported_at?: string | null;
+};
+
+export type GhlDiscoveryReport = {
+  id: string;
+  owner_id: string;
+  location_id: string | null;
+  account_name: string | null;
+  source: "browser" | "api" | "manual" | "import";
+  status: GhlDiscoveryStatus;
+  inventory: GhlDiscoveredResource[];
+  gap_analysis: GhlGapAnalysisItem[];
+  blocked_reason: string | null;
+  notes: string | null;
+  discovered_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type AiEmployeeSummary = AiEmployee & {

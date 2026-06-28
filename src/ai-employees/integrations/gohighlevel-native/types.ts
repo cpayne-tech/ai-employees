@@ -24,6 +24,7 @@ export type GhlExportPackage = {
 export type GhlProfileBuildInput = {
   employee: AiEmployee;
   profile?: GhlAiAgentProfile | GhlAiAgentProfileInput | null;
+  discoveryComplete?: boolean;
 };
 
 export type GhlDeploymentChecklistItem = {

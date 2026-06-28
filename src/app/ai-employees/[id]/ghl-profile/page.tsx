@@ -5,6 +5,7 @@ import { saveGhlAiAgentProfileAction } from "@/ai-employees/actions";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { SubmitButton } from "@/ai-employees/components/submit-button";
+import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
 import { getAiEmployeeDetail } from "@/ai-employees/data/repository";
 import { getGhlAiAgentProfileForEmployee } from "@/ai-employees/data/ghl-profiles";
 import { buildDefaultGhlAiAgentProfile } from "@/ai-employees/integrations/gohighlevel-native/agent-profile-builder";
@@ -21,9 +22,10 @@ export default async function GhlProfilePage({
 }) {
   await requireAiEmployeesAccess();
   const { id } = await params;
-  const [detail, savedProfile] = await Promise.all([
+  const [detail, savedProfile, discovery] = await Promise.all([
     getAiEmployeeDetail(id),
-    getGhlAiAgentProfileForEmployee(id)
+    getGhlAiAgentProfileForEmployee(id),
+    getLatestGhlDiscoveryReport()
   ]);
 
   if (!detail) {
@@ -33,7 +35,8 @@ export default async function GhlProfilePage({
   const profile = savedProfile ?? buildDefaultGhlAiAgentProfile(detail.employee);
   const checklist = buildGhlDeploymentChecklist({
     employee: detail.employee,
-    profile
+    profile,
+    discoveryComplete: discovery?.status === "discovered"
   });
   const saveAction = saveGhlAiAgentProfileAction.bind(null, detail.employee.id);
 
@@ -50,9 +53,13 @@ export default async function GhlProfilePage({
         </>
       }
       eyebrow="GoHighLevel Native AI Agent"
-      subtitle="Configure how this AI Employee should run inside GoHighLevel conversations, workflows, calendars, and pipelines."
+      subtitle="Prepare the AI Agent profile for GoHighLevel. Existing GHL assets stay read-only until discovery and gap analysis are complete."
       title={detail.employee.name}
     >
+      <div className="setup-note">
+        Discovery-first mode is active. Use existing GoHighLevel resources only after they are inventoried; create new namespaced resources only after confirmed gaps and explicit approval.
+      </div>
+
       <form action={saveAction} className="wizard-form">
         <input name="id" type="hidden" value={"id" in profile ? profile.id ?? "" : ""} />
 
@@ -121,6 +128,11 @@ export default async function GhlProfilePage({
               </li>
             ))}
           </ul>
+          {discovery?.status !== "discovered" ? (
+            <p className="muted">
+              GoHighLevel discovery is not complete. This profile can be saved internally, but it should not be deployed into production GHL assets yet.
+            </p>
+          ) : null}
         </ProfileSection>
 
         <div className="button-row">
