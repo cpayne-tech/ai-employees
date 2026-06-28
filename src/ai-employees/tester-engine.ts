@@ -39,6 +39,7 @@ export type TesterResult = {
   assistantMessage: string;
   status: "in_progress" | "qualified" | "appointment_requested" | "escalated";
   systemPrompt: string;
+  providerWarning?: string;
 };
 
 export function runReceptionistTestTurn(input: {
@@ -71,6 +72,7 @@ export function runReceptionistTestTurn(input: {
         `What should I capture for ${missingField.replaceAll("_", " ")}?`;
     } else {
       extractedLead.qualified = true;
+      extractedLead.qualification_status = "qualified";
       extractedLead.appointment_requested = Boolean(extractedLead.preferred_time);
       status = extractedLead.preferred_time
         ? "appointment_requested"
@@ -166,7 +168,14 @@ function extractLead(message: string, priorLead: ExtractedLead): ExtractedLead {
   lead.qualified = Boolean(
     lead.name && lead.email && lead.phone && !lead.escalation_needed
   );
+  lead.qualification_status = lead.qualified ? "qualified" : "in_progress";
   lead.escalation_needed = lead.escalation_needed ?? false;
+  lead.missing_fields = ["name", "phone", "email"].filter(
+    (field) => !lead[field as keyof ExtractedLead]
+  );
+  lead.intent = lead.intent ?? "test inquiry";
+  lead.lead_score = lead.qualified ? 80 : 35;
+  lead.follow_up_needed = !lead.qualified && !lead.escalation_needed;
 
   return lead;
 }

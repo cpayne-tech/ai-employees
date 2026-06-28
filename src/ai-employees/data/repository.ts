@@ -79,7 +79,8 @@ function normalizeEmployee(row: Record<string, unknown>): AiEmployee {
     ghl_calendar_id: String(row.ghl_calendar_id ?? ""),
     ghl_pipeline_id: String(row.ghl_pipeline_id ?? ""),
     ghl_opportunity_stage_id: String(row.ghl_opportunity_stage_id ?? ""),
-    ghl_source_name: String(row.ghl_source_name ?? "")
+    ghl_source_name: String(row.ghl_source_name ?? ""),
+    ghl_enabled: Boolean(row.ghl_enabled)
   };
 }
 
@@ -465,7 +466,7 @@ export async function saveTestConversation(input: {
 export async function saveExtractedLead(input: {
   employee: AiEmployee;
   conversationId: string;
-  lead: ExtractedLead;
+    lead: ExtractedLead;
 }) {
   if (!input.lead.name && !input.lead.email && !input.lead.phone) {
     return null;
@@ -483,7 +484,11 @@ export async function saveExtractedLead(input: {
     phone: input.lead.phone ?? null,
     service_needed: input.lead.service_needed ?? null,
     preferred_time: input.lead.preferred_time ?? null,
-    status: input.lead.qualified ? "qualified" : "captured",
+    status: input.lead.qualification_status === "unqualified"
+      ? "unqualified"
+      : input.lead.qualified
+        ? "qualified"
+        : "captured",
     source: "test",
     notes: input.lead.notes ?? null,
     created_at: timestamp,
@@ -524,6 +529,38 @@ export async function saveExtractedLead(input: {
   }
   await writeDevStore(store);
   return lead;
+}
+
+export async function updateAiEmployeeLeadStatus(id: string, status: string) {
+  const supabase = getSupabaseAdminClient();
+  const update = { status, updated_at: now() };
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("ai_employee_leads")
+      .update(update)
+      .eq("id", id)
+      .eq("owner_id", ownerId())
+      .select("*")
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as AiEmployeeLead;
+  }
+
+  const store = await readDevStore();
+  const index = store.leads.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    throw new Error("Lead not found.");
+  }
+
+  store.leads[index] = { ...store.leads[index], ...update };
+  await writeDevStore(store);
+  return store.leads[index];
 }
 
 export async function createAppointmentRequest(input: {
@@ -659,6 +696,7 @@ export async function listLeads(filters: {
   employeeId?: string;
   status?: string;
   source?: string;
+  search?: string;
 } = {}) {
   noStore();
   const supabase = getSupabaseAdminClient();
@@ -679,6 +717,13 @@ export async function listLeads(filters: {
     if (filters.source && filters.source !== "all") {
       query = query.eq("source", filters.source);
     }
+    if (!filters.status || filters.status === "all") {
+      query = query.neq("status", "archived");
+    }
+    if (filters.search?.trim()) {
+      const search = filters.search.trim().replaceAll("%", "");
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,service_needed.ilike.%${search}%`);
+    }
 
     const { data, error } = await query;
     if (error) {
@@ -691,7 +736,15 @@ export async function listLeads(filters: {
   return store.leads
     .filter((lead) => !filters.employeeId || filters.employeeId === "all" || lead.ai_employee_id === filters.employeeId)
     .filter((lead) => !filters.status || filters.status === "all" || lead.status === filters.status)
+    .filter((lead) => filters.status === "archived" || lead.status !== "archived")
     .filter((lead) => !filters.source || filters.source === "all" || lead.source === filters.source)
+    .filter((lead) => {
+      if (!filters.search?.trim()) {
+        return true;
+      }
+      const search = filters.search.trim().toLowerCase();
+      return `${lead.name ?? ""} ${lead.email ?? ""} ${lead.phone ?? ""} ${lead.service_needed ?? ""}`.toLowerCase().includes(search);
+    })
     .map((lead) => ({
       ...lead,
       ai_employees: {

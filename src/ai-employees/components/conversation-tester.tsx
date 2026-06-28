@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import {
@@ -26,7 +27,19 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
     <section className="card tester">
       <div>
         <h2>Test employee</h2>
-        <p className="muted">{employee.name} is running in test mode.</p>
+        <p className="muted">{employee.name} is running in test mode. Test conversations are saved separately from future live traffic.</p>
+      </div>
+      <div className="button-row">
+        <span className="setup-badge needs-setup">Mode: test</span>
+        <span className={`setup-badge ${state.status === "escalated" ? "not-connected" : state.status === "qualified" || state.status === "appointment_requested" ? "ready" : "needs-setup"}`}>
+          {state.status}
+        </span>
+        <Link className="button secondary" href={`/ai-employees/${employee.id}/test`}>
+          New test conversation
+        </Link>
+        <Link className="button secondary" href={`/ai-employees/${employee.id}`}>
+          Back to details
+        </Link>
       </div>
       <div className="chat-log" aria-live="polite">
         {state.transcript.length === 0 ? (
@@ -47,6 +60,7 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
         )}
       </div>
       {state.error ? <div className="error-box">{state.error}</div> : null}
+      {state.providerWarning ? <div className="setup-note">{state.providerWarning}</div> : null}
       <form ref={formRef} action={formAction} className="button-row">
         <input type="hidden" name="employeeId" value={employee.id} />
         <input name="message" placeholder="Type a simulated visitor message" />
@@ -62,9 +76,15 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
             service: state.extractedLead.service_needed,
             preferred_time: state.extractedLead.preferred_time,
             urgency: state.extractedLead.urgency,
+            intent: state.extractedLead.intent,
             qualified: state.extractedLead.qualified ? "true" : "false",
+            qualification_status: state.extractedLead.qualification_status,
+            missing_fields: state.extractedLead.missing_fields?.join(", "),
+            lead_score: typeof state.extractedLead.lead_score === "number" ? String(state.extractedLead.lead_score) : "",
             appointment_requested: state.extractedLead.appointment_requested ? "true" : "false",
-            escalation: state.extractedLead.escalation_needed ? state.extractedLead.escalation_reason : "false"
+            escalation: state.extractedLead.escalation_needed ? state.extractedLead.escalation_reason : "false",
+            follow_up_needed: state.extractedLead.follow_up_needed ? "true" : "false",
+            follow_up_status: state.extractedLead.follow_up_status
           }).map(([label, value]) => (
             <div className="extract-row" key={label}>
               <span>{label.replaceAll("_", " ")}</span>

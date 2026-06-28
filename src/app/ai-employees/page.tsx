@@ -58,7 +58,12 @@ export default async function AiEmployeesDashboardPage() {
 
   return (
     <AppFrame
-      actions={<Link className="button" href="/ai-employees/new">New AI Employee</Link>}
+      actions={
+        <>
+          <Link className="button secondary" href="/ai-employees/onboarding">Create from wizard</Link>
+          <Link className="button" href="/ai-employees/new">New AI Employee</Link>
+        </>
+      }
       subtitle="A command center for the five AI employees that will run intake, qualification, support, appointments, and follow-up."
       title="Dashboard"
     >
@@ -72,6 +77,7 @@ export default async function AiEmployeesDashboardPage() {
           </p>
         </div>
         <div className="hero-actions">
+          <Link className="button" href="/ai-employees/onboarding">Create from wizard</Link>
           <Link className="button" href="/ai-employees/employees">Manage roster</Link>
           <Link className="button secondary" href="/ai-employees/settings">Setup status</Link>
         </div>
@@ -138,7 +144,7 @@ export default async function AiEmployeesDashboardPage() {
                   </div>
                   <Link
                     className="text-link"
-                    href={employee ? `/ai-employees/${employee.id}` : "/ai-employees/new"}
+                    href={employee ? `/ai-employees/${employee.id}` : "/ai-employees/onboarding"}
                   >
                     {employee ? "Open employee" : "Create this role"}
                   </Link>

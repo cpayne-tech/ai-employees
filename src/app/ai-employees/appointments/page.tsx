@@ -1,5 +1,7 @@
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { EmptyState } from "@/ai-employees/components/empty-state";
+import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { listAiEmployees, listAppointments } from "@/ai-employees/data/repository";
 
 export default async function AppointmentsPage({
@@ -47,14 +49,21 @@ export default async function AppointmentsPage({
                 <td>{appointment.ai_employee_leads?.name ?? appointment.ai_employee_leads?.phone ?? "Unknown lead"}</td>
                 <td>{appointment.requested_time}</td>
                 <td>{appointment.ai_employees?.name ?? "Unknown employee"}</td>
-                <td>{appointment.appointment_status}</td>
+                <td><StatusBadge status={appointment.appointment_status} /></td>
                 <td>{appointment.notes ?? "No notes"}</td>
                 <td>{new Date(appointment.created_at).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!appointments.length ? <div className="empty-state"><h2>No appointment requests match these filters</h2></div> : null}
+        {!appointments.length ? (
+          <EmptyState
+            actionHref="/ai-employees/conversations"
+            actionLabel="Review conversations"
+            description="Appointment requests are created only when a test or future live conversation captures a preferred time."
+            title="No appointment requests match these filters"
+          />
+        ) : null}
       </section>
     </AppFrame>
   );

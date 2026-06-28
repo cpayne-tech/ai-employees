@@ -12,6 +12,7 @@ import {
   saveExtractedLead,
   saveTestConversation,
   updateAiEmployee,
+  updateAiEmployeeLeadStatus,
   updateAiEmployeeStatus,
   type AiEmployeeInput
 } from "@/ai-employees/data/repository";
@@ -48,7 +49,11 @@ const employeeSchema = z.object({
   ghl_calendar_id: z.string().optional().default(""),
   ghl_pipeline_id: z.string().optional().default(""),
   ghl_opportunity_stage_id: z.string().optional().default(""),
-  ghl_source_name: z.string().optional().default("")
+  ghl_source_name: z.string().optional().default(""),
+  ghl_enabled: z
+    .union([z.literal("on"), z.literal("true"), z.literal("1")])
+    .optional()
+    .transform(Boolean)
 });
 
 export type TesterActionState = {
@@ -57,9 +62,17 @@ export type TesterActionState = {
   extractedLead: ExtractedLead;
   status: "idle" | "in_progress" | "qualified" | "appointment_requested" | "escalated";
   error?: string;
+  providerWarning?: string;
 };
 
 export async function createAiEmployeeAction(formData: FormData) {
+  await assertAiEmployeesAccess();
+  const employee = await createAiEmployee(parseEmployeeForm(formData));
+  revalidatePath("/ai-employees");
+  redirect(`/ai-employees/${employee.id}`);
+}
+
+export async function createOnboardingAiEmployeeAction(formData: FormData) {
   await assertAiEmployeesAccess();
   const employee = await createAiEmployee(parseEmployeeForm(formData));
   revalidatePath("/ai-employees");
@@ -93,6 +106,14 @@ export async function archiveAiEmployeeAction(id: string) {
   await updateAiEmployeeStatus(id, "archived");
   revalidatePath("/ai-employees");
   revalidatePath(`/ai-employees/${id}`);
+}
+
+export async function archiveLeadAction(id: string) {
+  await assertAiEmployeesAccess();
+  await updateAiEmployeeLeadStatus(id, "archived");
+  revalidatePath("/ai-employees");
+  revalidatePath("/ai-employees/leads");
+  revalidatePath(`/ai-employees/leads/${id}`);
 }
 
 export async function sendTestMessageAction(
@@ -166,7 +187,8 @@ export async function sendTestMessageAction(
     conversationId: conversation.id,
     transcript: result.transcript,
     extractedLead: result.extractedLead,
-    status: result.status
+    status: result.status,
+    providerWarning: result.providerWarning
   };
 }
 

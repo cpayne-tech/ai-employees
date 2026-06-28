@@ -31,6 +31,7 @@ const mainNav = [
     match: (pathname: string) =>
       pathname === "/ai-employees/employees" ||
       pathname === "/ai-employees/new" ||
+      pathname === "/ai-employees/onboarding" ||
       /^\/ai-employees\/[0-9a-f-]{36}(?:\/(?:edit|test))?$/.test(pathname)
   },
   {

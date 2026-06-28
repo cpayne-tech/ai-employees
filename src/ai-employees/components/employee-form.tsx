@@ -86,6 +86,14 @@ export function EmployeeForm({
             defaultValue={employee?.ghl_opportunity_stage_id ?? ""}
           />
           <Field name="ghl_source_name" label="GHL source name" defaultValue={employee?.ghl_source_name ?? ""} />
+          <label className="check-row">
+            <input
+              defaultChecked={employee?.ghl_enabled ?? false}
+              name="ghl_enabled"
+              type="checkbox"
+            />
+            Enable GoHighLevel mapping when credentials are ready
+          </label>
         </div>
       </section>
       <div className="button-row" style={{ marginTop: 18 }}>

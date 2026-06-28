@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { EmptyState } from "@/ai-employees/components/empty-state";
+import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { listAiEmployees, listConversations } from "@/ai-employees/data/repository";
 
 export default async function ConversationsPage({
@@ -52,18 +54,25 @@ export default async function ConversationsPage({
               <tr key={conversation.id}>
                 <td>{conversation.visitor_name ?? conversation.extracted_lead.name ?? "Unknown visitor"}</td>
                 <td>{conversation.ai_employees?.name ?? "Unknown employee"}</td>
-                <td>{conversation.status}</td>
-                <td>{conversation.mode}</td>
+                <td><StatusBadge status={conversation.status} /></td>
+                <td><span className="setup-badge needs-setup">{conversation.mode}</span></td>
                 <td>{new Date(conversation.created_at).toLocaleString()}</td>
                 <td>{conversation.summary ?? "No summary"}</td>
-                <td>{conversation.extracted_lead.name || conversation.extracted_lead.phone || conversation.extracted_lead.email ? "yes" : "no"}</td>
-                <td>{conversation.extracted_lead.escalation_needed ? "yes" : "no"}</td>
+                <td>{conversation.extracted_lead.name || conversation.extracted_lead.phone || conversation.extracted_lead.email ? "Captured" : "None"}</td>
+                <td>{conversation.extracted_lead.escalation_needed ? "Needs review" : "No"}</td>
                 <td><Link className="button secondary" href={`/ai-employees/conversations/${conversation.id}`}>Open</Link></td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!conversations.length ? <div className="empty-state"><h2>No conversations match these filters</h2></div> : null}
+        {!conversations.length ? (
+          <EmptyState
+            actionHref="/ai-employees/employees"
+            actionLabel="Start a test chat"
+            description="Test chat transcripts will appear here after you send the first simulated visitor message."
+            title="No conversations match these filters"
+          />
+        ) : null}
       </section>
     </AppFrame>
   );

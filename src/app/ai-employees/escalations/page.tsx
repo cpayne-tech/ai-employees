@@ -1,5 +1,7 @@
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { EmptyState } from "@/ai-employees/components/empty-state";
+import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { listAiEmployees, listEscalations } from "@/ai-employees/data/repository";
 
 export default async function EscalationsPage({
@@ -48,13 +50,20 @@ export default async function EscalationsPage({
                 <td>{escalation.message}</td>
                 <td>{escalation.ai_employees?.name ?? "Unknown employee"}</td>
                 <td>{escalation.ai_employee_leads?.name ?? escalation.ai_employee_leads?.phone ?? "No linked lead"}</td>
-                <td>{escalation.status}</td>
+                <td><StatusBadge status={escalation.status} /></td>
                 <td>{new Date(escalation.created_at).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!escalations.length ? <div className="empty-state"><h2>No escalations match these filters</h2></div> : null}
+        {!escalations.length ? (
+          <EmptyState
+            actionHref="/ai-employees/conversations"
+            actionLabel="Review conversations"
+            description="Escalations appear when an AI employee needs human review or confidence is low."
+            title="No escalations match these filters"
+          />
+        ) : null}
       </section>
     </AppFrame>
   );

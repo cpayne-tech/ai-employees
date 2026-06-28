@@ -48,7 +48,12 @@ export default async function AiEmployeesListPage({
 
   return (
     <AppFrame
-      actions={<Link href="/ai-employees/new" className="button">New AI Employee</Link>}
+      actions={
+        <>
+          <Link href="/ai-employees/onboarding" className="button secondary">Create from wizard</Link>
+          <Link href="/ai-employees/new" className="button">New AI Employee</Link>
+        </>
+      }
       subtitle="Search, filter, test, and manage every AI employee."
       title="AI Employees"
     >

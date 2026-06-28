@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { archiveLeadAction } from "@/ai-employees/actions";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { getLeadDetail } from "@/ai-employees/data/repository";
@@ -19,7 +20,16 @@ export default async function LeadDetailPage({
 
   return (
     <AppFrame
-      actions={<Link className="button secondary" href="/ai-employees/leads">Back to leads</Link>}
+      actions={
+        <>
+          <Link className="button secondary" href="/ai-employees/leads">Back to leads</Link>
+          {detail.lead.status !== "archived" ? (
+            <form action={archiveLeadAction.bind(null, detail.lead.id)}>
+              <button className="button danger" type="submit">Archive lead</button>
+            </form>
+          ) : null}
+        </>
+      }
       eyebrow="Lead detail"
       subtitle={detail.lead.ai_employees?.name ?? "Unknown employee"}
       title={detail.lead.name ?? "Unknown lead"}

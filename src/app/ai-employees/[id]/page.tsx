@@ -5,10 +5,12 @@ import {
   archiveAiEmployeeAction,
   pauseAiEmployeeAction
 } from "@/ai-employees/actions";
+import { getAiProviderStatus } from "@/ai-employees/ai";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { getAiEmployeeDetail } from "@/ai-employees/data/repository";
+import { getEmployeeLaunchReadiness } from "@/ai-employees/launch-readiness";
 
 export default async function AiEmployeeProfilePage({
   params
@@ -24,6 +26,8 @@ export default async function AiEmployeeProfilePage({
   }
 
   const { employee } = detail;
+  const aiProvider = getAiProviderStatus();
+  const readiness = getEmployeeLaunchReadiness(detail, aiProvider.configured);
 
   return (
     <AppFrame
@@ -64,6 +68,29 @@ export default async function AiEmployeeProfilePage({
         <Stat label="Conversations" value={employee.total_conversations} />
         <Stat label="Appointments" value={employee.total_appointments} />
         <Stat label="Escalations" value={employee.total_escalations} />
+      </section>
+
+      <section className="card launch-card" style={{ marginTop: 18 }}>
+        <div className="section-header">
+          <div>
+            <h2>Launch readiness</h2>
+            <p className="muted">Computed from real configuration and test activity.</p>
+          </div>
+          <div className="readiness-score">
+            <strong>{readiness.score}%</strong>
+            <span>{readiness.label}</span>
+          </div>
+        </div>
+        <ul className="checklist">
+          {readiness.checklist.map((item) => (
+            <li key={item.label}>
+              <span>{item.label}</span>
+              <span className={`setup-badge ${item.state}`}>
+                {item.state === "ready" ? "Ready" : item.state === "not-connected" ? "Not connected" : "Needs setup"}
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div className="grid" style={{ marginTop: 18 }}>
@@ -109,6 +136,7 @@ export default async function AiEmployeeProfilePage({
               <Detail label="Pipeline ID" value={employee.ghl_pipeline_id} />
               <Detail label="Stage ID" value={employee.ghl_opportunity_stage_id} />
               <Detail label="Source name" value={employee.ghl_source_name} />
+              <Detail label="Mapping enabled" value={employee.ghl_enabled ? "Prepared, not sending" : "Not enabled"} />
             </div>
           </section>
         </div>

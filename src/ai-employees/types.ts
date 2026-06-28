@@ -20,11 +20,17 @@ export type ExtractedLead = {
   service_needed?: string;
   preferred_time?: string;
   urgency?: string;
+  intent?: string;
   notes?: string;
   qualified?: boolean;
+  qualification_status?: string;
+  missing_fields?: string[];
+  lead_score?: number;
   escalation_needed?: boolean;
   escalation_reason?: string;
   appointment_requested?: boolean;
+  follow_up_needed?: boolean;
+  follow_up_status?: string;
 };
 
 export type AiEmployee = {
@@ -54,6 +60,7 @@ export type AiEmployee = {
   ghl_pipeline_id: string;
   ghl_opportunity_stage_id: string;
   ghl_source_name: string;
+  ghl_enabled: boolean;
   created_at: string;
   updated_at: string;
 };

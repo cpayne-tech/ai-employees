@@ -1,6 +1,7 @@
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { getAiProviderStatus } from "@/ai-employees/ai";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { getGoHighLevelStatus } from "@/ai-employees/integrations/gohighlevel/client";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 type BadgeState = "ready" | "needs-setup" | "not-connected";
@@ -12,6 +13,7 @@ export default async function AiEmployeesSettingsPage() {
   const ownerExists = Boolean(process.env.AI_EMPLOYEES_OWNER_ID);
   const ghlApiKeyConfigured = Boolean(process.env.GHL_API_KEY || process.env.GOHIGHLEVEL_API_KEY);
   const ghlLocationConfigured = Boolean(process.env.GHL_LOCATION_ID || process.env.GOHIGHLEVEL_LOCATION_ID);
+  const ghlStatus = getGoHighLevelStatus();
 
   return (
     <AppFrame
@@ -32,8 +34,8 @@ export default async function AiEmployeesSettingsPage() {
             <HealthCard label="AI Provider" ready={aiProvider.configured} />
             <HealthCard
               label="GoHighLevel"
-              ready={ghlApiKeyConfigured && ghlLocationConfigured}
-              stateWhenNotReady="not-connected"
+              ready={ghlStatus === "ready_for_test"}
+              stateWhenNotReady={ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
             />
           </div>
         </section>
@@ -68,7 +70,10 @@ export default async function AiEmployeesSettingsPage() {
               </div>
               <div className="record-list">
                 <IntegrationRow label="AI Provider" state={aiProvider.configured ? "ready" : "needs-setup"} />
-                <IntegrationRow label="GoHighLevel" state="not-connected" />
+                <IntegrationRow
+                  label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
+                  state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
+                />
                 <IntegrationRow label="Calendar" state="not-connected" />
                 <IntegrationRow label="SMS" state="not-connected" />
                 <IntegrationRow label="Email" state="not-connected" />
