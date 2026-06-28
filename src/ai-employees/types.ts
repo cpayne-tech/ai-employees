@@ -4,7 +4,8 @@ export type AiEmployeeType =
   | "AI Receptionist / Appointment Setter"
   | "AI Website Concierge"
   | "AI Lead Qualifier"
-  | "AI Customer Support Agent";
+  | "AI Customer Support Agent"
+  | "AI Follow-up Coordinator";
 
 export type TranscriptMessage = {
   role: "visitor" | "assistant" | "system";

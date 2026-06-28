@@ -24,7 +24,8 @@ const employeeSchema = z.object({
     "AI Receptionist / Appointment Setter",
     "AI Website Concierge",
     "AI Lead Qualifier",
-    "AI Customer Support Agent"
+    "AI Customer Support Agent",
+    "AI Follow-up Coordinator"
   ]),
   status: z.enum(["draft", "active", "paused", "archived"]),
   business_name: z.string().min(1),

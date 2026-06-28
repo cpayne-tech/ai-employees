@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { EmptyState } from "@/ai-employees/components/empty-state";
+import { StatCard } from "@/ai-employees/components/stat-card";
 import { StatusBadge } from "@/ai-employees/components/status-badge";
 import { listAiEmployees } from "@/ai-employees/data/repository";
 import type { AiEmployeeStatus, AiEmployeeType } from "@/ai-employees/types";
@@ -19,7 +20,8 @@ const typeOptions: Array<AiEmployeeType | "all"> = [
   "AI Receptionist / Appointment Setter",
   "AI Website Concierge",
   "AI Lead Qualifier",
-  "AI Customer Support Agent"
+  "AI Customer Support Agent",
+  "AI Follow-up Coordinator"
 ];
 
 export default async function AiEmployeesListPage({
@@ -39,6 +41,10 @@ export default async function AiEmployeesListPage({
     search,
     includeArchived
   });
+  const totalVisible = employees.filter((employee) => employee.status !== "archived").length;
+  const activeCount = employees.filter((employee) => employee.status === "active").length;
+  const pausedCount = employees.filter((employee) => employee.status === "paused").length;
+  const draftCount = employees.filter((employee) => employee.status === "draft").length;
 
   return (
     <AppFrame
@@ -46,6 +52,13 @@ export default async function AiEmployeesListPage({
       subtitle="Search, filter, test, and manage every AI employee."
       title="AI Employees"
     >
+      <section className="grid stats-grid compact-stats" aria-label="AI employee roster totals">
+        <StatCard detail="Not archived" label="Visible roster" value={totalVisible} />
+        <StatCard detail="Ready for traffic" label="Active" value={activeCount} />
+        <StatCard detail="Temporarily stopped" label="Paused" value={pausedCount} />
+        <StatCard detail="Still being configured" label="Draft" value={draftCount} />
+      </section>
+
       <form className="card filters-bar">
         <div className="field">
           <label htmlFor="search">Search</label>
@@ -75,7 +88,7 @@ export default async function AiEmployeesListPage({
       </form>
 
       {employees.length ? (
-        <section className="table-wrap">
+        <section className="table-wrap roster-table">
           <table>
             <thead>
               <tr>

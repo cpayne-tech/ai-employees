@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAiProviderStatus } from "@/ai-employees/ai";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { DataCard } from "@/ai-employees/components/data-card";
@@ -11,6 +12,7 @@ import {
   listEscalations,
   listLeads
 } from "@/ai-employees/data/repository";
+import { aiEmployeeRoleBlueprints } from "@/ai-employees/role-blueprints";
 
 export default async function AiEmployeesDashboardPage() {
   await requireAiEmployeesAccess();
@@ -20,61 +22,179 @@ export default async function AiEmployeesDashboardPage() {
     listConversations(),
     listEscalations({ status: "open" })
   ]);
-
+  const aiProvider = getAiProviderStatus();
   const visibleEmployees = employees.filter((employee) => employee.status !== "archived");
-  const totals = employees.reduce(
-    (summary, employee) => ({
-      appointments: summary.appointments + employee.total_appointments,
-      conversations: summary.conversations + employee.total_conversations,
-      escalations: summary.escalations + employee.total_escalations,
-      leads: summary.leads + employee.total_leads
-    }),
-    { appointments: 0, conversations: 0, escalations: 0, leads: 0 }
+  const activeEmployees = employees.filter((employee) => employee.status === "active");
+  const configuredRoles = aiEmployeeRoleBlueprints.filter((blueprint) =>
+    visibleEmployees.some((employee) => employee.type === blueprint.type)
   );
+  const totalAppointments = employees.reduce(
+    (count, employee) => count + employee.total_appointments,
+    0
+  );
+  const setupItems = [
+    {
+      label: "AI provider",
+      ready: aiProvider.configured,
+      detail: aiProvider.configured ? aiProvider.provider : "Add API key later"
+    },
+    {
+      label: "GoHighLevel",
+      ready: Boolean(process.env.GHL_API_KEY || process.env.GOHIGHLEVEL_API_KEY),
+      detail: "Credentials pending"
+    },
+    {
+      label: "Calendar",
+      ready: false,
+      detail: "Not connected"
+    },
+    {
+      label: "Public capture",
+      ready: false,
+      detail: "Widget/API pending"
+    }
+  ];
+  const setupReadyCount = setupItems.filter((item) => item.ready).length;
 
   return (
     <AppFrame
       actions={<Link className="button" href="/ai-employees/new">New AI Employee</Link>}
-      subtitle="Manage AI employees, captured leads, conversations, and automation activity."
+      subtitle="A command center for the five AI employees that will run intake, qualification, support, appointments, and follow-up."
       title="Dashboard"
     >
+      <section className="dashboard-hero">
+        <div className="hero-copy">
+          <div className="eyebrow">AI workforce rollout</div>
+          <h2>{configuredRoles.length} of 5 roles configured</h2>
+          <p>
+            Build the operating team first, then connect AI, GoHighLevel, calendar,
+            and public lead capture when you are ready.
+          </p>
+        </div>
+        <div className="hero-actions">
+          <Link className="button" href="/ai-employees/employees">Manage roster</Link>
+          <Link className="button secondary" href="/ai-employees/settings">Setup status</Link>
+        </div>
+      </section>
+
       <section className="grid stats-grid" aria-label="AI employee totals">
-        <StatCard label="Total AI Employees" value={visibleEmployees.length} />
-        <StatCard label="Active AI Employees" value={employees.filter((employee) => employee.status === "active").length} />
-        <StatCard label="Total Leads" value={totals.leads} />
-        <StatCard label="Total Conversations" value={totals.conversations} />
-        <StatCard label="Appointment Requests" value={totals.appointments} />
-        <StatCard label="Open Escalations" value={escalations.length} />
+        <StatCard
+          detail="Goal is 5 specialized employees"
+          label="Roster Progress"
+          value={`${configuredRoles.length}/5`}
+        />
+        <StatCard
+          detail={`${visibleEmployees.length} total visible`}
+          label="Active Employees"
+          value={activeEmployees.length}
+        />
+        <StatCard
+          detail="Captured from test/live conversations"
+          label="Leads"
+          value={leads.length}
+        />
+        <StatCard
+          detail="Conversation records"
+          label="Conversations"
+          value={conversations.length}
+        />
+        <StatCard
+          detail="Calendar connection pending"
+          label="Appointment Requests"
+          value={totalAppointments}
+        />
+        <StatCard
+          detail="Needs human review"
+          label="Open Escalations"
+          value={escalations.length}
+        />
+      </section>
+
+      <section className="dashboard-layout">
+        <DataCard
+          description="Each card represents one planned AI employee. Cards use real employee records when they exist."
+          title="Five AI Employee Blueprint"
+          viewAllHref="/ai-employees/employees"
+        >
+          <div className="role-grid">
+            {aiEmployeeRoleBlueprints.map((blueprint) => {
+              const employee = visibleEmployees.find((item) => item.type === blueprint.type);
+
+              return (
+                <div className="role-card" key={blueprint.type}>
+                  <div className="role-card-header">
+                    <div>
+                      <span>{blueprint.label}</span>
+                      <strong>{employee?.name ?? "Not created yet"}</strong>
+                    </div>
+                    {employee ? <StatusBadge status={employee.status} /> : <span className="setup-badge needs-setup">Needed</span>}
+                  </div>
+                  <p>{blueprint.job}</p>
+                  <div className="role-outcome">{blueprint.outcome}</div>
+                  <div className="chip-row">
+                    {blueprint.setupFocus.slice(0, 3).map((item) => (
+                      <span className="mini-chip" key={item}>{item}</span>
+                    ))}
+                  </div>
+                  <Link
+                    className="text-link"
+                    href={employee ? `/ai-employees/${employee.id}` : "/ai-employees/new"}
+                  >
+                    {employee ? "Open employee" : "Create this role"}
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </DataCard>
+
+        <div className="side-stack">
+          <DataCard
+            description={`${setupReadyCount} of ${setupItems.length} launch dependencies are ready.`}
+            title="Launch Readiness"
+            viewAllHref="/ai-employees/settings"
+          >
+            <div className="readiness-list">
+              {setupItems.map((item) => (
+                <div className="readiness-row" key={item.label}>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <span className={`setup-badge ${item.ready ? "ready" : "not-connected"}`}>
+                    {item.ready ? "Ready" : "Pending"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DataCard>
+
+          <DataCard
+            description="The most important operator-facing items right now."
+            title="Needs Attention"
+          >
+            <div className="attention-list">
+              <AttentionItem
+                count={5 - configuredRoles.length}
+                href="/ai-employees/new"
+                label="AI employee roles still need to be created"
+              />
+              <AttentionItem
+                count={setupItems.length - setupReadyCount}
+                href="/ai-employees/settings"
+                label="launch dependencies still need setup"
+              />
+              <AttentionItem
+                count={escalations.length}
+                href="/ai-employees/escalations"
+                label="open escalations need review"
+              />
+            </div>
+          </DataCard>
+        </div>
       </section>
 
       <div className="dashboard-grid">
-        <DataCard
-          description="Most recently created or updated employee records."
-          title="Recent AI Employees"
-          viewAllHref="/ai-employees/employees"
-        >
-          {employees.length ? (
-            <div className="record-list">
-              {employees.slice(0, 5).map((employee) => (
-                <Link className="record-row" href={`/ai-employees/${employee.id}`} key={employee.id}>
-                  <div>
-                    <strong>{employee.name}</strong>
-                    <p className="muted">{employee.type} - {employee.business_name}</p>
-                  </div>
-                  <StatusBadge status={employee.status} />
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              actionHref="/ai-employees/new"
-              actionLabel="Create AI employee"
-              description="Create your first generic AI employee to start testing the workflow."
-              title="No AI employees yet"
-            />
-          )}
-        </DataCard>
-
         <DataCard
           description="Newest leads captured by test or live conversations."
           title="Recent Leads"
@@ -124,32 +244,24 @@ export default async function AiEmployeesDashboardPage() {
             />
           )}
         </DataCard>
-
-        <DataCard
-          description="Open items waiting for human review."
-          title="Recent Escalations"
-          viewAllHref="/ai-employees/escalations"
-        >
-          {escalations.length ? (
-            <div className="record-list">
-              {escalations.slice(0, 5).map((escalation) => (
-                <div className="record-row" key={escalation.id}>
-                  <div>
-                    <strong>{escalation.reason}</strong>
-                    <p className="muted">{escalation.message}</p>
-                  </div>
-                  <span className="record-meta">{escalation.status}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              description="Escalations will appear when an AI employee flags an item for review."
-              title="No open escalations"
-            />
-          )}
-        </DataCard>
       </div>
     </AppFrame>
+  );
+}
+
+function AttentionItem({
+  count,
+  href,
+  label
+}: {
+  count: number;
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link className="attention-item" href={href}>
+      <strong>{count}</strong>
+      <span>{label}</span>
+    </Link>
   );
 }
