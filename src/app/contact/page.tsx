@@ -37,7 +37,7 @@ const contactBlocks = [
 export default function ContactPage() {
   return (
     <PublicPageShell>
-      <section className="funnel-page-hero">
+      <section className="funnel-page-hero visual-page-hero">
         <div>
           <span className="eyebrow">Request AI Employee Setup</span>
           <h1>Map your first AI employee workflow with OBMC.</h1>
@@ -46,6 +46,10 @@ export default function ContactPage() {
             OBMC will use that context to plan the right AI employee setup and GoHighLevel handoff.
           </p>
         </div>
+        <div
+          aria-label="Customer support and implementation desk"
+          className="stock-visual stock-visual-contact"
+        />
       </section>
 
       <section className="contact-layout">

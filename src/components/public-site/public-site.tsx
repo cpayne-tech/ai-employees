@@ -22,7 +22,6 @@ export function PublicHeader() {
         {publicNavLinks.map((link) => (
           <Link href={link.href} key={link.href}>{link.label}</Link>
         ))}
-        <Link href="/ai-employees/login">Admin Login</Link>
       </nav>
       <Link className="button funnel-nav-cta" href="/contact">
         Start Setup
@@ -56,7 +55,6 @@ export function PublicFooter() {
           <Link href="/contact">Contact</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
-          <Link href="/ai-employees/login">Admin Login</Link>
         </div>
         <div className="funnel-footer-cta">
           <strong>Ready to map your first AI employee?</strong>
@@ -67,7 +65,7 @@ export function PublicFooter() {
         </div>
       </div>
       <div className="funnel-footer-bottom">
-        <span>© {new Date().getFullYear()} One Big Media Company</span>
+        <span>Copyright {new Date().getFullYear()} One Big Media Company</span>
         <span>Human-controlled AI workforce setup.</span>
       </div>
     </footer>

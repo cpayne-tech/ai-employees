@@ -227,6 +227,30 @@ export default function Home() {
         <strong>A managed AI workforce setup for real business operations.</strong>
       </section>
 
+      <section className="funnel-image-band">
+        <div
+          aria-label="Operations team reviewing customer conversations and follow-up work"
+          className="stock-visual stock-visual-ops"
+        />
+        <div className="image-copy-card">
+          <span className="eyebrow">Operational, not ornamental</span>
+          <h2>A real service layer behind the AI conversations.</h2>
+          <p>
+            AI employees need business rules, CRM destinations, escalation logic,
+            and a launch checklist. OBMC packages those pieces into a managed
+            operating system instead of leaving customers with a loose prompt.
+          </p>
+          <div className="image-proof-list">
+            {["Role-specific intake fields", "CRM handoff planning", "Human approval before launch"].map((item) => (
+              <span className="image-proof-item" key={item}>
+                <CheckCircle2 size={16} />
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="funnel-section split">
         <div>
           <span className="eyebrow">The problem</span>
@@ -338,6 +362,23 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="funnel-image-band reverse">
+        <div className="image-copy-card">
+          <span className="eyebrow">Customer handoff design</span>
+          <h2>Keep the front office moving while owners stay in control.</h2>
+          <p>
+            The experience is designed for businesses that need cleaner lead capture,
+            faster qualification, and better follow-up context without letting automation
+            make sensitive decisions on its own.
+          </p>
+          <Link className="button secondary" href="/contact">Plan the first handoff</Link>
+        </div>
+        <div
+          aria-label="Business team coordinating customer intake and sales follow-up"
+          className="stock-visual stock-visual-handoff"
+        />
       </section>
 
       <section className="funnel-section">

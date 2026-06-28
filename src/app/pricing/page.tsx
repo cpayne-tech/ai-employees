@@ -75,7 +75,11 @@ export default function PricingPage() {
             <Link className="button secondary" href="/contact">Ask a Setup Question</Link>
           </div>
         </div>
-        <div className="pricing-summary-panel">
+        <div className="pricing-summary-panel pricing-photo-panel">
+          <div
+            aria-label="Team planning automation packages and implementation steps"
+            className="stock-visual stock-visual-pricing compact"
+          />
           <ShieldCheck size={24} />
           <strong>Human-controlled launch is included.</strong>
           <p>No production CRM workflow goes live until setup, mapping, and handoff rules are reviewed.</p>

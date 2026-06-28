@@ -37,7 +37,7 @@ const values = [
 export default function AboutPage() {
   return (
     <PublicPageShell>
-      <section className="funnel-page-hero">
+      <section className="funnel-page-hero visual-page-hero">
         <div>
           <span className="eyebrow">About One Big Media Company</span>
           <h1>Building AI employees that help businesses operate with more clarity and control.</h1>
@@ -48,6 +48,10 @@ export default function AboutPage() {
             prepare follow-up, and connect the right work into GoHighLevel.
           </p>
         </div>
+        <div
+          aria-label="Business operators reviewing process improvements together"
+          className="stock-visual stock-visual-team"
+        />
       </section>
 
       <section className="funnel-section split">
