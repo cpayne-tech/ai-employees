@@ -3142,11 +3142,11 @@ textarea {
   margin-bottom: 16px;
 }
 
-.legal-disclaimer {
-  background: #fff7ed;
-  border: 1px solid #fedf89;
+.legal-meta {
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
   border-radius: 8px;
-  color: #92400e;
+  color: var(--brand-dark);
   font-weight: 800;
   max-width: 880px;
   padding: 14px;

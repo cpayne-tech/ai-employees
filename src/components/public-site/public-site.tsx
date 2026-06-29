@@ -65,7 +65,7 @@ export function PublicFooter() {
         </div>
       </div>
       <div className="funnel-footer-bottom">
-        <span>Copyright {new Date().getFullYear()} One Big Media Company</span>
+        <span>Copyright {new Date().getFullYear()} One Big Media Company LLC</span>
         <span>Human-controlled AI workforce setup.</span>
       </div>
     </footer>
