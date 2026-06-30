@@ -13,7 +13,7 @@ import { buildGhlDeploymentChecklist } from "@/ai-employees/integrations/gohighl
 import type { GhlAiAgentProfileInput, GhlDeploymentStatus } from "@/ai-employees/types";
 
 const channels = ["SMS", "Web Chat", "Email", "Instagram DM", "Facebook Messenger", "Multi-channel"];
-const statuses: GhlDeploymentStatus[] = ["draft", "ready_for_review", "exported", "connected", "needs_update"];
+const statuses: GhlDeploymentStatus[] = ["draft", "ready_for_review", "exported", "connected", "live", "needs_update"];
 
 export default async function GhlProfilePage({
   params

@@ -20,7 +20,7 @@ export default async function AiEmployeesSettingsPage() {
   const ghlProfiles = await listGhlAiAgentProfiles({});
   const discoveryComplete = discovery?.status === "discovered";
   const connectedProfiles = ghlProfiles.filter(
-    (profile) => profile.deployment_status === "connected"
+    (profile) => ["connected", "live"].includes(profile.deployment_status)
   ).length;
   const fiveAgentsMapped = connectedProfiles >= 5;
 

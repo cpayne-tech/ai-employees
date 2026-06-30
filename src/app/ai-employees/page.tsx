@@ -80,6 +80,7 @@ export default async function AiEmployeesDashboardPage() {
   const profilesReady = ghlProfiles.filter((profile) => profile.deployment_status === "ready_for_review").length;
   const profilesExported = ghlProfiles.filter((profile) => profile.deployment_status === "exported").length;
   const profilesConnected = ghlProfiles.filter((profile) => profile.deployment_status === "connected").length;
+  const profilesLive = ghlProfiles.filter((profile) => profile.deployment_status === "live").length;
   const profilesNeedUpdate = ghlProfiles.filter((profile) => profile.deployment_status === "needs_update").length;
   const customersNeedingIntake = customers.filter((customer) =>
     ["paid_setup", "intake_needed"].includes(customer.lifecycle_status)
@@ -197,9 +198,9 @@ export default async function AiEmployeesDashboardPage() {
           value={profilesExported}
         />
         <StatCard
-          detail={`${profilesNeedUpdate} need update`}
+          detail={`${profilesLive} live, ${profilesNeedUpdate} need update`}
           label="Profiles Connected"
-          value={profilesConnected}
+          value={profilesConnected + profilesLive}
         />
         <StatCard
           detail="Needs human review"

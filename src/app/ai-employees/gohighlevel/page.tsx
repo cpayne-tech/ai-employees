@@ -23,6 +23,7 @@ export default async function GoHighLevelPage() {
   const ghlStatus = getGoHighLevelStatus();
   const exported = profiles.filter((profile) => profile.deployment_status === "exported").length;
   const connected = profiles.filter((profile) => profile.deployment_status === "connected").length;
+  const live = profiles.filter((profile) => profile.deployment_status === "live").length;
   const discoverySummary = summarizeDiscovery(latestDiscovery);
 
   return (
@@ -40,6 +41,7 @@ export default async function GoHighLevelPage() {
         <StatCard label="GHL Profiles" value={profiles.length} detail="Saved AI Agent profiles" />
         <StatCard label="Prepared" value={exported} detail="Copy-ready packages marked prepared" />
         <StatCard label="Connected" value={connected} detail="Profiles marked connected" />
+        <StatCard label="Live" value={live} detail="Native GHL agents in Auto-Pilot" />
         <StatCard label="Discovery" value={discoverySummary.status.replaceAll("_", " ")} detail={`${discoverySummary.inventoryCount} resources inventoried`} />
       </section>
 

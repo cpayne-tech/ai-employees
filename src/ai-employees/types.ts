@@ -4,6 +4,7 @@ export type GhlDeploymentStatus =
   | "ready_for_review"
   | "exported"
   | "connected"
+  | "live"
   | "needs_update";
 
 export type GhlDiscoveryStatus =
