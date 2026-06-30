@@ -83,7 +83,7 @@ export default async function AiEmployeeOnboardingPage() {
 
         <WizardStep number="6" title="Review and create">
           <p className="muted">
-            This creates a draft AI employee. You can run an Internal Simulation, then build the GoHighLevel AI Agent profile and export package.
+            This creates a draft AI employee. You can run a safe test conversation, then build the GoHighLevel AI Agent profile and export package.
           </p>
           <input name="status" type="hidden" value="draft" />
           <input name="ghl_location_id" type="hidden" value="" />

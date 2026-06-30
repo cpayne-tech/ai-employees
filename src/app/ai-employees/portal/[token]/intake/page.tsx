@@ -35,8 +35,8 @@ export default async function CustomerIntakePage({
         <Link className="public-brand" href={`/ai-employees/portal/${token}`}>
           <Bot size={22} />
           <span>
-            <strong>One Big Media Company</strong>
-            AI Employees
+            <strong>OBMC AI Employees</strong>
+            Customer Workspace
           </span>
         </Link>
         <Link className="button secondary" href={`/ai-employees/portal/${token}`}>
@@ -59,6 +59,14 @@ export default async function CustomerIntakePage({
           <strong>{intake ? "Update" : "Start"}</strong>
           <p>{customer.plan_name ?? customer.plan_id}</p>
         </div>
+      </section>
+
+      <section className="customer-only-banner">
+        <strong>Customer intake only.</strong>
+        <p>
+          This form captures launch requirements. It does not change your live
+          GoHighLevel account or activate automations.
+        </p>
       </section>
 
       <form action={submitCustomerIntakeAction.bind(null, token)} className="intake-form">

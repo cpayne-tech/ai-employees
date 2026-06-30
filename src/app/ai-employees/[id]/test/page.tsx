@@ -34,7 +34,7 @@ export default async function TestAiEmployeePage({
           </Link>
         </>
       }
-      eyebrow="Internal Simulation"
+      eyebrow="Test Conversation"
       subtitle={`${detail.employee.type} for ${detail.employee.business_name}`}
       title={detail.employee.name}
     >
@@ -44,7 +44,7 @@ export default async function TestAiEmployeePage({
 
       {!provider.configured ? (
         <div className="setup-note">
-          Local Simulation is active. This build works without an OpenAI key; add a Simulation (LLM) provider later only if you want richer test conversations.
+          Built-in testing is active. This build works without an OpenAI key; add the optional AI testing upgrade later only if you want richer test conversations.
         </div>
       ) : null}
 

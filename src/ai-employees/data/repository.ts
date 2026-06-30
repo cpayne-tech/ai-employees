@@ -1167,30 +1167,30 @@ export async function listEscalations(filters: {
 const defaultSetupTasks = [
   {
     title: "Confirm package and payment",
-    description: "Verify setup fee, recurring plan, and customer contact details.",
+    description: "Confirm the selected package, payment status, customer email, and portal access.",
     task_status: "done",
     sort_order: 10
   },
   {
-    title: "Send business intake",
-    description: "Collect business services, FAQs, lead rules, calendars, escalation contacts, and brand voice.",
+    title: "Customer completes business intake",
+    description: "Collect services, FAQs, lead fields, appointment rules, escalation contacts, and brand voice.",
     task_status: "not_started",
     sort_order: 20
   },
   {
-    title: "Create AI employee drafts",
-    description: "Create the purchased AI employee roles and map them to the customer workspace.",
+    title: "OBMC creates AI employee drafts",
+    description: "Create the purchased AI employee roles and attach them to the customer workspace.",
     task_status: "not_started",
     sort_order: 30
   },
   {
-    title: "Map GoHighLevel resources",
+    title: "Map GoHighLevel handoffs",
     description: "Map calendars, pipeline stages, tags, fields, and safe sync settings before launch.",
     task_status: "not_started",
     sort_order: 40
   },
   {
-    title: "Review and activate production",
+    title: "Customer reviews launch plan",
     description: "Review customer approvals, test the AI employee behavior, and activate production-safe sync.",
     task_status: "not_started",
     sort_order: 50

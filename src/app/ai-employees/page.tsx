@@ -9,6 +9,7 @@ import { StatusBadge } from "@/ai-employees/components/status-badge";
 import {
   listAiEmployees,
   listConversations,
+  listCustomers,
   listEscalations,
   listLeads
 } from "@/ai-employees/data/repository";
@@ -18,11 +19,12 @@ import { aiEmployeeRoleBlueprints } from "@/ai-employees/role-blueprints";
 
 export default async function AiEmployeesDashboardPage() {
   await requireAiEmployeesAccess();
-  const [employees, leads, conversations, escalations, ghlProfiles, discovery] = await Promise.all([
+  const [employees, leads, conversations, escalations, customers, ghlProfiles, discovery] = await Promise.all([
     listAiEmployees({ includeArchived: true }),
     listLeads(),
     listConversations(),
     listEscalations({ status: "open" }),
+    listCustomers(),
     listGhlAiAgentProfiles(),
     getLatestGhlDiscoveryReport()
   ]);
@@ -39,7 +41,7 @@ export default async function AiEmployeesDashboardPage() {
   const discoveryComplete = discovery?.status === "discovered";
   const setupItems = [
     {
-      label: "Local simulation",
+      label: "Built-in testing",
       ready: true,
       detail: aiProvider.configured ? `${aiProvider.provider} available` : "Ready without OpenAI"
     },
@@ -69,6 +71,39 @@ export default async function AiEmployeesDashboardPage() {
   const profilesExported = ghlProfiles.filter((profile) => profile.deployment_status === "exported").length;
   const profilesConnected = ghlProfiles.filter((profile) => profile.deployment_status === "connected").length;
   const profilesNeedUpdate = ghlProfiles.filter((profile) => profile.deployment_status === "needs_update").length;
+  const customersNeedingIntake = customers.filter((customer) =>
+    ["paid_setup", "intake_needed"].includes(customer.lifecycle_status)
+  ).length;
+  const openSetupTasks = customers.reduce(
+    (count, customer) => count + Math.max(customer.total_setup_tasks - customer.completed_setup_tasks, 0),
+    0
+  );
+  const operatorQueue = [
+    {
+      count: customersNeedingIntake,
+      href: "/ai-employees/customers",
+      label: "Send intake link",
+      text: "New paid customers need their business intake completed."
+    },
+    {
+      count: 5 - configuredRoles.length,
+      href: "/ai-employees/onboarding",
+      label: "Create missing AI roles",
+      text: "Finish the five-role team before presenting a complete setup."
+    },
+    {
+      count: setupItems.length - setupReadyCount,
+      href: "/ai-employees/settings",
+      label: "Clear setup blockers",
+      text: "Review integration readiness and any pending configuration."
+    },
+    {
+      count: escalations.length,
+      href: "/ai-employees/escalations",
+      label: "Review escalations",
+      text: "Open human-review items need attention before launch."
+    }
+  ];
 
   return (
     <AppFrame
@@ -103,11 +138,30 @@ export default async function AiEmployeesDashboardPage() {
       <section className="product-lane-grid">
         <div className="product-lane ready">
           <span>Current build</span>
-          <strong>Local simulation, customer preview, GHL sync, billing workflow</strong>
+          <strong>Built-in testing, customer preview, GHL sync, billing workflow</strong>
         </div>
         <div className="product-lane future">
           <span>Future build</span>
-          <strong>Optional LLM provider, lead discovery, deeper n8n workflows</strong>
+          <strong>Optional AI testing upgrade, lead discovery, deeper n8n workflows</strong>
+        </div>
+      </section>
+
+      <section className="operator-queue">
+        <div className="section-header">
+          <div>
+            <h2>Operator Queue</h2>
+            <p className="muted">Start here. These are the next admin tasks in priority order.</p>
+          </div>
+          <Link className="button secondary" href="/ai-employees/customers">Open customers</Link>
+        </div>
+        <div className="operator-queue-grid">
+          {operatorQueue.map((item) => (
+            <Link className="operator-task-card" href={item.href} key={item.label}>
+              <span>{Math.max(item.count, 0)}</span>
+              <strong>{item.label}</strong>
+              <p>{item.text}</p>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -141,6 +195,11 @@ export default async function AiEmployeesDashboardPage() {
           detail="Needs human review"
           label="Open Escalations"
           value={escalations.length}
+        />
+        <StatCard
+          detail="Across all customer setups"
+          label="Open Setup Tasks"
+          value={openSetupTasks}
         />
       </section>
 
@@ -273,7 +332,7 @@ export default async function AiEmployeesDashboardPage() {
             </div>
           ) : (
             <EmptyState
-              description="Internal Simulation transcripts appear here before the profile is deployed into GoHighLevel."
+              description="Test conversation transcripts appear here before the profile is deployed into GoHighLevel."
               title="No conversations yet"
             />
           )}

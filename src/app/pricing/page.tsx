@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, ShieldCheck } from "lucide-react";
 import { billingPlans, getSetupPaymentLinkUrl } from "@/ai-employees/billing";
 import { FunnelCta, PublicPageShell } from "@/components/public-site/public-site";
 
@@ -20,38 +20,36 @@ export const metadata: Metadata = {
 
 const packageNotes: Record<string, string[]> = {
   starter: [
-    "One AI employee role",
-    "Business intake",
-    "Prompt and instruction setup",
-    "Basic lead capture",
-    "Internal simulation",
-    "Launch checklist"
+    "One focused AI employee",
+    "Business intake and prompt setup",
+    "Lead capture dashboard",
+    "Built-in testing before launch"
   ],
   growth: [
-    "Up to the full five-role AI employee team",
-    "GoHighLevel mapping",
-    "Qualification rules",
-    "Escalation rules",
-    "Pipeline and calendar mapping plan",
-    "Workflow trigger plan"
+    "Full five-role AI employee team",
+    "GoHighLevel contact, tag, calendar, and pipeline mapping",
+    "Customer intake and private workspace",
+    "Recommended for most businesses"
   ],
   scale: [
-    "All AI employee roles",
-    "Complete intake and configuration",
-    "Full GoHighLevel mapping plan",
-    "Internal simulation review",
-    "Launch readiness checklist",
-    "Premium setup support"
+    "Everything in AI Employee Team",
+    "Custom workflow planning",
+    "n8n-ready orchestration support",
+    "Monthly optimization review"
   ]
 };
 
+const purchaseSteps = [
+  "Choose package",
+  "Pay setup fee",
+  "Complete intake",
+  "Review launch"
+];
+
 const pricingFaqs = [
-  ["Is this a chatbot?", "No. It is a managed AI workforce setup with role design, intake, CRM mapping, records, and launch review."],
-  ["Do I need GoHighLevel?", "GoHighLevel is the preferred execution layer. The system is designed around GHL contacts, notes, tags, calendars, pipelines, and workflows."],
-  ["Will it replace my staff?", "No. It helps your staff respond faster, collect better information, and organize follow-up. Human review stays part of the process."],
-  ["Can I approve before launch?", "Yes. The setup includes internal simulation and human-controlled launch review."],
-  ["Does it change my existing GHL account?", "Existing GoHighLevel assets should be discovered and preserved. Production changes require approval."],
-  ["Can it work for regulated industries?", "It can capture information and route conversations, but it does not provide legal, medical, or financial advice."]
+  ["Which plan should I pick?", "Most businesses should start with AI Employee Team because it includes all five core roles."],
+  ["What happens after I pay?", "Your customer record is created, setup tasks begin, and you complete business intake before launch review."],
+  ["Does this activate AI automatically?", "No. Setup, GoHighLevel mapping, and production activation stay review-first."]
 ];
 
 export default function PricingPage() {
@@ -62,17 +60,17 @@ export default function PricingPage() {
       <section className="funnel-page-hero pricing-page-hero">
         <div>
           <span className="eyebrow">Pricing</span>
-          <h1>Choose the managed AI Employee setup that fits your business.</h1>
+          <h1>Pick the setup level. Then complete intake.</h1>
           <p>
-            Setup pricing is already connected through GHL and Stripe. Start with the setup level
-            you need, then activate the matching SaaS plan during onboarding.
+            Start with the setup package. After payment, the next job is simple:
+            submit business details so OBMC can build and review your AI employees.
           </p>
           <div className="funnel-hero-actions">
             <Link className="button" href={getSetupPaymentLinkUrl(recommendedPlan)} target="_blank">
               Start with {recommendedPlan.name}
               <ArrowRight size={16} />
             </Link>
-            <Link className="button secondary" href="/contact">Ask a Setup Question</Link>
+            <Link className="button secondary" href="/purchase-success">See What Happens Next</Link>
           </div>
         </div>
         <div className="pricing-summary-panel pricing-photo-panel">
@@ -81,23 +79,37 @@ export default function PricingPage() {
             className="stock-visual stock-visual-pricing compact"
           />
           <ShieldCheck size={24} />
-          <strong>Human-controlled launch is included.</strong>
-          <p>No production CRM workflow goes live until setup, mapping, and handoff rules are reviewed.</p>
+          <strong>Recommended: {recommendedPlan.name}</strong>
+          <p>{recommendedPlan.summary}</p>
+        </div>
+      </section>
+
+      <section className="funnel-section pricing-flow-section">
+        <div className="section-heading-wide">
+          <span className="eyebrow">Purchase flow</span>
+          <h2>Four steps, no guessing.</h2>
+        </div>
+        <div className="purchase-flow-grid">
+          {purchaseSteps.map((step, index) => (
+            <div className="purchase-flow-step" key={step}>
+              <span>{index + 1}</span>
+              <strong>{step}</strong>
+            </div>
+          ))}
         </div>
       </section>
 
       <section className="funnel-section">
-        <div className="pricing-offer-grid">
+        <div className="pricing-offer-grid simplified">
           {billingPlans.map((plan) => (
-            <article className={plan.recommended ? "pricing-offer-card featured" : "pricing-offer-card"} key={plan.id}>
-              <span>{plan.recommended ? "Recommended" : "Package"}</span>
+            <article className={plan.recommended ? "pricing-offer-card featured simplified" : "pricing-offer-card simplified"} key={plan.id}>
+              <span>{plan.recommended ? "Best fit" : "Package"}</span>
               <h2>{plan.name}</h2>
               <p>{plan.audience}</p>
               <div className="price-lockup">
                 <strong>{plan.setupFee}</strong>
                 <small>{plan.monthlyFee} after setup</small>
               </div>
-              <p>{plan.summary}</p>
               <ul>
                 {(packageNotes[plan.id] ?? plan.includes).map((item) => (
                   <li key={item}>
@@ -112,6 +124,24 @@ export default function PricingPage() {
               </Link>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="funnel-section split">
+        <div>
+          <span className="eyebrow">After checkout</span>
+          <h2>Payment is only the first step. Intake starts the actual build.</h2>
+          <p>
+            The system is designed to create a customer setup record after purchase.
+            The customer then completes intake so OBMC can configure roles, rules,
+            GoHighLevel mapping, and launch approval.
+          </p>
+        </div>
+        <div className="after-purchase-card">
+          <ClipboardList size={24} />
+          <strong>Post-purchase page ready</strong>
+          <p>Use this page as the success redirect for GHL/Stripe payment links:</p>
+          <Link className="text-link" href="/purchase-success">/purchase-success</Link>
         </div>
       </section>
 

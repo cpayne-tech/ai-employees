@@ -42,10 +42,10 @@ export function getEmployeeLaunchReadiness(
     { label: "FAQs or business info added", state: hasBusinessInfo ? "ready" : "needs-setup" },
     { label: "Escalation contact added", state: hasEscalation ? "ready" : "needs-setup" },
     {
-      label: aiProviderConfigured ? "Simulation (LLM) available" : "Local simulation available",
+      label: aiProviderConfigured ? "Optional AI testing available" : "Built-in testing available",
       state: "ready"
     },
-    { label: "Internal Simulation completed", state: testConversation ? "ready" : "needs-setup" },
+    { label: "Test conversation completed", state: testConversation ? "ready" : "needs-setup" },
     { label: "Lead extraction verified", state: leadExtractionVerified ? "ready" : "needs-setup" },
     {
       label: "GoHighLevel discovery completed",

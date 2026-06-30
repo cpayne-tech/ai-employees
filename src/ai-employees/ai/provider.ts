@@ -37,7 +37,7 @@ export async function runAiEmployeeProviderTurn(input: {
     return {
       ...runReceptionistTestTurn(input),
       systemPrompt,
-      providerWarning: error instanceof Error ? error.message : "Simulation provider call failed."
+      providerWarning: error instanceof Error ? error.message : "Optional AI testing call failed."
     };
   }
 }
@@ -87,7 +87,7 @@ async function runOpenAiTurn(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI simulation provider returned ${response.status}: ${errorText.slice(0, 180)}`);
+    throw new Error(`Optional AI testing returned ${response.status}: ${errorText.slice(0, 180)}`);
   }
 
   const body = await response.json() as OpenAiResponseBody;
@@ -185,7 +185,7 @@ function extractResponseText(body: OpenAiResponseBody) {
     .find((value): value is string => Boolean(value));
 
   if (!text) {
-    throw new Error("OpenAI simulation provider did not return text output.");
+    throw new Error("Optional AI testing did not return text output.");
   }
 
   return text;

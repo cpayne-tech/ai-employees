@@ -68,8 +68,8 @@ export default async function ConversationsPage({
         {!conversations.length ? (
           <EmptyState
             actionHref="/ai-employees/employees"
-            actionLabel="Start Internal Simulation"
-            description="Internal Simulation transcripts appear here after you send the first simulated GHL conversation message."
+            actionLabel="Start Test Conversation"
+            description="Test conversation transcripts appear here after you send the first safe test message."
             title="No conversations match these filters"
           />
         ) : null}

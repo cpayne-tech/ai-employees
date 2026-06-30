@@ -28,11 +28,11 @@ export default async function AiEmployeeCustomerPortalPage({
   return (
     <main className="client-portal-shell">
       <nav className="client-portal-nav">
-        <Link className="public-brand" href="/ai-employees/pricing">
+        <Link className="public-brand" href="/">
           <Bot size={22} />
           <span>
-            <strong>One Big Media Company</strong>
-            AI Employees
+            <strong>OBMC AI Employees</strong>
+            Customer Workspace
           </span>
         </Link>
         <span className={`setup-badge ${customer.lifecycle_status === "live" ? "ready" : "manual"}`}>
@@ -54,6 +54,23 @@ export default async function AiEmployeeCustomerPortalPage({
           <strong>{setupPercent}%</strong>
           <p>{completedTasks} of {setupTasks.length} launch tasks complete</p>
         </div>
+      </section>
+
+      <section className="customer-only-banner">
+        <strong>This is the customer side.</strong>
+        <p>
+          No admin controls are shown here. Customers can complete intake, track setup,
+          and see what OBMC needs before launch approval.
+        </p>
+      </section>
+
+      <section className="setup-progress-tracker" aria-label="Setup progress tracker">
+        {["Payment", "Intake", "AI roles", "GHL mapping", "Launch review"].map((step, index) => (
+          <div className={progressStepClass(index, setupPercent, Boolean(intake))} key={step}>
+            <span>{index + 1}</span>
+            <strong>{step}</strong>
+          </div>
+        ))}
       </section>
 
       <section className="client-portal-grid">
@@ -179,4 +196,20 @@ function formatMoney(value?: number | null, currency?: string | null) {
 
 function formatDate(value?: string | null) {
   return value ? new Date(value).toLocaleDateString() : "recently";
+}
+
+function progressStepClass(index: number, setupPercent: number, intakeComplete: boolean) {
+  if (index === 0) {
+    return "setup-progress-step complete";
+  }
+  if (index === 1) {
+    return intakeComplete ? "setup-progress-step complete" : "setup-progress-step current";
+  }
+  if (setupPercent >= 100) {
+    return "setup-progress-step complete";
+  }
+  if (setupPercent >= index * 20) {
+    return "setup-progress-step current";
+  }
+  return "setup-progress-step";
 }

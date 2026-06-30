@@ -26,8 +26,8 @@ export function ConversationTester({ employee }: { employee: AiEmployee }) {
   return (
     <section className="card tester">
       <div>
-        <h2>Internal Simulation</h2>
-        <p className="muted">{employee.name} is running in Internal Simulation mode to test prompts before safe GoHighLevel configuration.</p>
+        <h2>Test Conversation</h2>
+        <p className="muted">{employee.name} is running a safe test conversation before GoHighLevel configuration.</p>
       </div>
       <div className="button-row">
         <span className="setup-badge needs-setup">Mode: simulation</span>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bot, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, ClipboardList } from "lucide-react";
 
 export const publicNavLinks = [
   { href: "/", label: "Home" },
@@ -109,12 +109,28 @@ export function GHLContactFormEmbed() {
   if (!embedUrl) {
     return (
       <div className="ghl-form-placeholder">
-        <CheckCircle2 size={24} />
-        <strong>Contact form is being connected.</strong>
+        <ClipboardList size={24} />
+        <strong>Setup request form is being connected.</strong>
         <p>
-          Please check back soon or contact One Big Media Company directly for
-          AI Employee setup requests.
+          The GoHighLevel form URL has not been added yet. Until it is connected,
+          start from pricing or use this page to understand what information OBMC
+          needs for setup.
         </p>
+        <div className="placeholder-action-row">
+          <Link className="button" href="/pricing">
+            View Packages
+            <ArrowRight size={16} />
+          </Link>
+          <Link className="button secondary" href="/purchase-success">See Next Step</Link>
+        </div>
+        <div className="placeholder-checklist">
+          {["Business services", "FAQs and lead fields", "Appointment rules", "Escalation contacts"].map((item) => (
+            <span key={item}>
+              <CheckCircle2 size={15} />
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
     );
   }

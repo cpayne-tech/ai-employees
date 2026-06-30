@@ -105,7 +105,7 @@ export default async function AiEmployeesBillingPage() {
             <ConnectionRow label="Stripe publishable key" ready={Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)} />
             <ConnectionRow label="Stripe webhook secret" ready={Boolean(process.env.STRIPE_WEBHOOK_SECRET)} />
             <ConnectionRow label="n8n purchase webhook" ready={n8nPurchaseConfigured} optional />
-            <ConnectionRow label="Simulation (LLM) provider key" ready={Boolean(process.env.OPENAI_API_KEY)} optional />
+            <ConnectionRow label="Optional AI testing key" ready={Boolean(process.env.OPENAI_API_KEY)} optional />
           </div>
         </div>
       </section>

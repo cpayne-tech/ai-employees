@@ -42,9 +42,9 @@ export default async function AiEmployeesSettingsPage() {
           <div className="health-grid">
             <HealthCard label="Owner ID" ready={ownerExists} />
             <HealthCard label="Supabase" ready={supabaseConnected} />
-            <HealthCard label="Local Simulation" ready />
+            <HealthCard label="Built-in testing" ready />
             <HealthCard
-              label="Simulation (LLM)"
+              label="Optional AI testing"
               ready={aiProvider.configured}
               stateWhenNotReady="optional"
             />
@@ -71,8 +71,8 @@ export default async function AiEmployeesSettingsPage() {
               <ChecklistItem ready={ownerExists} text="AI employee owner configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_ADMIN_PASSWORD)} text="Admin password configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_SESSION_SECRET)} text="Session secret configured" />
-              <ChecklistItem ready text="Local simulation engine available without OpenAI" />
-              <ChecklistItem ready={aiProvider.configured} state={aiProvider.configured ? "ready" : "optional"} text="Simulation (LLM) provider key configured" />
+              <ChecklistItem ready text="Built-in test engine works without OpenAI" />
+              <ChecklistItem ready={aiProvider.configured} state={aiProvider.configured ? "ready" : "optional"} text="Optional AI testing key configured" />
               <ChecklistItem ready={ghlApiKeyConfigured} text="GoHighLevel API key configured" />
               <ChecklistItem ready={ghlLocationConfigured} text="GoHighLevel location ID configured" />
               <ChecklistItem ready={discoveryComplete} text="GoHighLevel read-only discovery completed" />
@@ -91,8 +91,8 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <div className="record-list">
-                <IntegrationRow label="Local simulation engine" state="ready" />
-                <IntegrationRow label="Simulation (LLM) provider" state={aiProvider.configured ? "ready" : "optional"} />
+                <IntegrationRow label="Built-in test engine" state="ready" />
+                <IntegrationRow label="Optional AI testing upgrade" state={aiProvider.configured ? "ready" : "optional"} />
                 <IntegrationRow
                   label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
                   state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
@@ -142,7 +142,7 @@ export default async function AiEmployeesSettingsPage() {
             <IntegrationCard title="n8n Lead Sync Orchestration" text="Receives AI Employee lead-synced events after successful GoHighLevel sync when the webhook is configured." state={n8nStatus.leadSync === "ready" ? "ready" : "not-connected"} />
             <IntegrationCard title="n8n Purchase Orchestration" text="Optional downstream notification after Stripe purchase records are safely stored in the app." state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} />
             <IntegrationCard title="Lead Generation" text="Future module for compliant discovery. It is not part of the current build." state="under-development" />
-            <IntegrationCard title="Simulation (LLM) Provider" text="Optional upgrade for richer internal simulation. The current build works with the local simulation engine." state={aiProvider.configured ? "ready" : "optional"} />
+            <IntegrationCard title="Optional AI Testing Upgrade" text="Optional richer test conversations. The current build works with the built-in test engine." state={aiProvider.configured ? "ready" : "optional"} />
           </div>
         </section>
       </div>
