@@ -5,7 +5,7 @@ import { buildAiEmployeePrompt } from "@/ai-employees/ai/prompt-builder";
 export function getAiProviderStatus() {
   return {
     configured: Boolean(process.env.OPENAI_API_KEY),
-    provider: process.env.OPENAI_API_KEY ? "OpenAI" : "Safe local mock"
+    provider: process.env.OPENAI_API_KEY ? "Enhanced test provider" : "Safe local mock"
   };
 }
 

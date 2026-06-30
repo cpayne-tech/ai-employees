@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { assertAiEmployeesAccess } from "@/ai-employees/auth";
 import {
   createManualCustomer,
+  getCustomerDetail,
   updateCustomerSetupTaskStatus,
   updateCustomerStatus
 } from "@/ai-employees/data/repository";
+import { sendIntakeLinkRequestToN8n } from "@/ai-employees/integrations/n8n/client";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type {
@@ -106,6 +108,30 @@ export async function updateCustomerSetupTaskAction(
   await assertAiEmployeesAccess();
   const taskStatus = parseOption(formData.get("task_status"), taskStatuses);
   await updateCustomerSetupTaskStatus(taskId, taskStatus);
+
+  revalidatePath("/ai-employees/customers");
+  revalidatePath(`/ai-employees/customers/${customerId}`);
+}
+
+export async function sendCustomerIntakeLinkAction(customerId: string) {
+  await assertAiEmployeesAccess();
+  const detail = await getCustomerDetail(customerId);
+
+  if (!detail) {
+    throw new Error("Customer not found.");
+  }
+
+  await sendIntakeLinkRequestToN8n({
+    event: "ai_employee.send_intake_link",
+    customer: detail.customer,
+    portalPath: `/ai-employees/portal/${detail.customer.portal_token}`
+  });
+
+  await updateCustomerStatus({
+    customerId,
+    lifecycleStatus: "intake_needed",
+    onboardingStatus: "intake_sent"
+  });
 
   revalidatePath("/ai-employees/customers");
   revalidatePath(`/ai-employees/customers/${customerId}`);

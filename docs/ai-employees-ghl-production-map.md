@@ -8,7 +8,7 @@ This file documents the current production-safe GoHighLevel setup for the One Bi
 - Form2Account and FormVeritas resources are preserved and are not reused for generic OBMC AI Employees.
 - The app does not seed Alder, Mia, life insurance, or client-specific demo data.
 - Live GHL writes happen only from explicit server actions, starting with the lead detail page sync button.
-- n8n is optional for GHL writes, but can receive downstream lead-sync events when `N8N_WEBHOOK_URL` is configured.
+- n8n is the automation layer for setup, intake, purchase, and downstream lead-sync events. Direct GHL writes remain review-first.
 
 ## Shared GoHighLevel Resources
 

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const packageNotes: Record<string, string[]> = {
   starter: [
     "One focused AI employee",
-    "Business intake and prompt setup",
+    "Business intake and workflow setup",
     "Lead capture dashboard",
     "Built-in testing before launch"
   ],

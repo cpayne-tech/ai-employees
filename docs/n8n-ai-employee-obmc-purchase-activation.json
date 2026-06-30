@@ -32,7 +32,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tasks: [\n      { owner: 'OBMC Admin', task: 'Review payment and selected package', status: 'manual' },\n      { owner: 'Customer', task: 'Complete business intake', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Create five AI employees', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Run local simulation and adjust prompts', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Map GHL resources and approve sync', status: 'manual' }\n    ]\n  }\n}];"
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tasks: [\n      { owner: 'OBMC Admin', task: 'Review payment and selected package', status: 'manual' },\n      { owner: 'Customer', task: 'Complete business intake', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Create five AI employees', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Run no-LLM workflow tests and adjust handoff rules', status: 'ready' },\n      { owner: 'OBMC Admin', task: 'Map GHL resources and approve sync', status: 'manual' }\n    ]\n  }\n}];"
       },
       "id": "code-build-activation-tasks",
       "name": "Build Activation Tasks",

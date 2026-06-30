@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getAiProviderStatus } from "@/ai-employees/ai";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { DataCard } from "@/ai-employees/components/data-card";
@@ -15,6 +14,7 @@ import {
 } from "@/ai-employees/data/repository";
 import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
 import { listGhlAiAgentProfiles } from "@/ai-employees/data/ghl-profiles";
+import { getN8nStatus } from "@/ai-employees/integrations/n8n/client";
 import { aiEmployeeRoleBlueprints } from "@/ai-employees/role-blueprints";
 
 export default async function AiEmployeesDashboardPage() {
@@ -28,7 +28,7 @@ export default async function AiEmployeesDashboardPage() {
     listGhlAiAgentProfiles(),
     getLatestGhlDiscoveryReport()
   ]);
-  const aiProvider = getAiProviderStatus();
+  const n8nStatus = getN8nStatus();
   const visibleEmployees = employees.filter((employee) => employee.status !== "archived");
   const activeEmployees = employees.filter((employee) => employee.status === "active");
   const configuredRoles = aiEmployeeRoleBlueprints.filter((blueprint) =>
@@ -41,9 +41,19 @@ export default async function AiEmployeesDashboardPage() {
   const discoveryComplete = discovery?.status === "discovered";
   const setupItems = [
     {
-      label: "Built-in testing",
+      label: "No-LLM test mode",
       ready: true,
-      detail: aiProvider.configured ? `${aiProvider.provider} available` : "Ready without OpenAI"
+      detail: "Ready without OpenAI"
+    },
+    {
+      label: "n8n workflows",
+      ready: n8nStatus.setupRequest === "ready" && n8nStatus.intakeSubmitted === "ready",
+      detail: `${[
+        n8nStatus.setupRequest === "ready" ? "setup" : null,
+        n8nStatus.intakeLink === "ready" ? "intake link" : null,
+        n8nStatus.intakeSubmitted === "ready" ? "intake" : null,
+        n8nStatus.purchaseWebhook === "ready" ? "purchase" : null
+      ].filter(Boolean).length} of 4 core webhooks ready`
     },
     {
       label: "GoHighLevel",
@@ -124,7 +134,7 @@ export default async function AiEmployeesDashboardPage() {
           <h2>{configuredRoles.length} of 5 roles configured</h2>
           <p>
             Current build focus: configure the five-agent team, preview the customer workspace,
-            use local simulation, and keep GoHighLevel production changes review-first.
+            use no-LLM workflow testing, and keep GoHighLevel production changes review-first.
           </p>
         </div>
         <div className="hero-actions">
@@ -138,11 +148,11 @@ export default async function AiEmployeesDashboardPage() {
       <section className="product-lane-grid">
         <div className="product-lane ready">
           <span>Current build</span>
-          <strong>Built-in testing, customer preview, GHL sync, billing workflow</strong>
+          <strong>n8n workflow hooks, customer preview, GHL sync, billing workflow</strong>
         </div>
         <div className="product-lane future">
           <span>Future build</span>
-          <strong>Optional AI testing upgrade, lead discovery, deeper n8n workflows</strong>
+          <strong>Lead discovery, deeper workflow reporting, client self-serve controls</strong>
         </div>
       </section>
 

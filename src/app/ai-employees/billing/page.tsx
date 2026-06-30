@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { billingPlans, billingReadiness, purchaseWorkflow } from "@/ai-employees/billing";
 import { AppFrame } from "@/ai-employees/components/app-frame";
+import { getN8nStatus } from "@/ai-employees/integrations/n8n/client";
 
 type BillingState = "ready" | "manual" | "future";
 
@@ -12,7 +13,8 @@ export default async function AiEmployeesBillingPage() {
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
       process.env.STRIPE_WEBHOOK_SECRET
   );
-  const n8nPurchaseConfigured = Boolean(process.env.N8N_PURCHASE_WEBHOOK_URL);
+  const n8nStatus = getN8nStatus();
+  const n8nPurchaseConfigured = n8nStatus.purchaseWebhook === "ready";
 
   return (
     <AppFrame
@@ -40,7 +42,7 @@ export default async function AiEmployeesBillingPage() {
         <div className="billing-snapshot">
           <span>Current billing mode</span>
           <strong>{stripeConfigured ? "Stripe purchase capture ready" : "Manual checkout first"}</strong>
-          <p>{n8nPurchaseConfigured ? "n8n purchase notification is configured." : "n8n is optional; Stripe records purchases directly."}</p>
+          <p>{n8nPurchaseConfigured ? "n8n purchase notification is configured." : "Add the n8n purchase webhook to automate the post-payment handoff."}</p>
         </div>
       </section>
 
@@ -104,8 +106,10 @@ export default async function AiEmployeesBillingPage() {
             <ConnectionRow label="Stripe secret key" ready={Boolean(process.env.STRIPE_SECRET_KEY)} />
             <ConnectionRow label="Stripe publishable key" ready={Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)} />
             <ConnectionRow label="Stripe webhook secret" ready={Boolean(process.env.STRIPE_WEBHOOK_SECRET)} />
-            <ConnectionRow label="n8n purchase webhook" ready={n8nPurchaseConfigured} optional />
-            <ConnectionRow label="Optional AI testing key" ready={Boolean(process.env.OPENAI_API_KEY)} optional />
+            <ConnectionRow label="n8n setup-request webhook" ready={n8nStatus.setupRequest === "ready"} />
+            <ConnectionRow label="n8n intake-link webhook" ready={n8nStatus.intakeLink === "ready"} />
+            <ConnectionRow label="n8n intake-submitted webhook" ready={n8nStatus.intakeSubmitted === "ready"} />
+            <ConnectionRow label="n8n purchase webhook" ready={n8nPurchaseConfigured} />
           </div>
         </div>
       </section>
@@ -159,8 +163,8 @@ export default async function AiEmployeesBillingPage() {
           />
           <HandoffItem
             title="n8n purchase notification"
-            status={n8nPurchaseConfigured ? "Ready" : "Optional"}
-            text="n8n receives a downstream notification only after the app safely stores the purchase record."
+            status={n8nPurchaseConfigured ? "Ready" : "Needs setup"}
+            text="n8n receives the downstream notification only after the app safely stores the purchase record."
           />
         </div>
       </section>

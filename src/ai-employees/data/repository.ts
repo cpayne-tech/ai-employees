@@ -1772,7 +1772,7 @@ export async function saveCustomerIntakeByPortalToken(
   customer.updated_at = timestamp;
 
   const task = store.customerSetupTasks.find((item) =>
-    item.customer_id === customer.id && item.title === "Send business intake"
+    item.customer_id === customer.id && ["Customer completes business intake", "Send business intake"].includes(item.title)
   );
   if (task) {
     task.task_status = "done";
@@ -1799,7 +1799,7 @@ async function markBusinessIntakeTaskDone(customerId: string, customerOwnerId: s
     })
     .eq("customer_id", customerId)
     .eq("owner_id", customerOwnerId)
-    .eq("title", "Send business intake");
+    .in("title", ["Customer completes business intake", "Send business intake"]);
 
   if (error) {
     throw new Error(error.message);

@@ -102,7 +102,7 @@ export const purchaseWorkflow: PurchaseWorkflowStep[] = [
     step: "AI employee roster configured",
     owner: "OBMC Admin",
     status: "ready",
-    detail: "Create the five role-specific employees, run local simulation, then generate GHL profile packages."
+    detail: "Create the five role-specific employees, run no-LLM workflow tests, then generate GHL profile packages."
   },
   {
     step: "GoHighLevel resources mapped",
@@ -120,7 +120,7 @@ export const purchaseWorkflow: PurchaseWorkflowStep[] = [
     step: "Post-purchase workflow notification",
     owner: "System",
     status: "ready",
-    detail: "Stripe is stored first; n8n is notified only when a purchase webhook URL is configured."
+    detail: "Stripe is stored first; n8n is notified when the purchase webhook URL is configured."
   }
 ];
 
@@ -148,7 +148,7 @@ export const billingReadiness = [
   {
     label: "Post-purchase n8n automation",
     status: "manual",
-    detail: "Optional downstream notification is supported when N8N_PURCHASE_WEBHOOK_URL is configured."
+    detail: "Downstream purchase notification is supported when N8N_PURCHASE_WEBHOOK_URL is configured."
   }
 ] as const;
 

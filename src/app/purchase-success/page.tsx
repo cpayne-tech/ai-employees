@@ -17,7 +17,7 @@ const nextSteps = [
   {
     icon: MailCheck,
     title: "Payment is recorded",
-    text: "The purchase webhook creates or updates the customer setup record when the payment provider sends the event."
+    text: "The payment webhook creates or updates the customer setup record, then n8n can route the handoff."
   },
   {
     icon: ClipboardList,
@@ -40,7 +40,7 @@ export default function PurchaseSuccessPage() {
           <h1>Your AI Employee setup is ready for intake.</h1>
           <p>
             Thank you for starting setup with One Big Media Company LLC. The next
-            step is to complete the business intake so the AI employee workflow
+            step is to complete business intake so the n8n and GoHighLevel workflow
             can be configured correctly.
           </p>
           <div className="funnel-hero-actions">
@@ -56,8 +56,8 @@ export default function PurchaseSuccessPage() {
           <strong>What happens now?</strong>
           <p>
             If your portal link was not sent automatically, OBMC can create or resend
-            it from the admin customer screen. The setup request form also creates
-            the admin-visible record OBMC needs for follow-up.
+            it from the admin customer screen through n8n. The setup request form
+            also creates the admin-visible record OBMC needs for follow-up.
           </p>
         </div>
       </section>

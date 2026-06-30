@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { billingPlans } from "@/ai-employees/billing";
 import { createManualCustomer } from "@/ai-employees/data/repository";
+import { sendSetupRequestToN8n } from "@/ai-employees/integrations/n8n/client";
 
 const setupRequestSchema = z.object({
   businessName: z.string().trim().min(1, "Business name is required."),
@@ -37,7 +38,7 @@ export async function submitPublicSetupRequestAction(formData: FormData) {
     parsed.notes ? `Additional notes: ${parsed.notes}` : null
   ].filter(Boolean);
 
-  await createManualCustomer({
+  const customer = await createManualCustomer({
     businessName: parsed.businessName,
     contactName: parsed.contactName,
     email: parsed.email,
@@ -47,6 +48,21 @@ export async function submitPublicSetupRequestAction(formData: FormData) {
     planName: plan?.name ?? "Manual review",
     notes: noteLines.join("\n")
   });
+
+  try {
+    await sendSetupRequestToN8n({
+      event: "ai_employee.setup_request_created",
+      customer,
+      request: {
+        timeline: parsed.timeline,
+        currentGhl: parsed.currentGhl,
+        primaryNeed: parsed.primaryNeed,
+        notes: parsed.notes || null
+      }
+    });
+  } catch (error) {
+    console.error("n8n setup request notification failed", error);
+  }
 
   revalidatePath("/ai-employees");
   revalidatePath("/ai-employees/customers");

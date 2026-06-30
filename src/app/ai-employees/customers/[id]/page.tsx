@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import {
+  sendCustomerIntakeLinkAction,
   updateCustomerLifecycleAction,
   updateCustomerSetupTaskAction
 } from "@/ai-employees/customer-actions";
@@ -9,6 +10,7 @@ import { requireAiEmployeesAccess } from "@/ai-employees/auth";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { EmptyState } from "@/ai-employees/components/empty-state";
 import { getCustomerDetail } from "@/ai-employees/data/repository";
+import { getN8nStatus } from "@/ai-employees/integrations/n8n/client";
 import type {
   AiEmployeeCustomerLifecycleStatus,
   AiEmployeeCustomerOnboardingStatus,
@@ -59,6 +61,7 @@ export default async function AiEmployeeCustomerDetailPage({
   }
 
   const { customer, purchases, setupTasks, stripeEvents } = detail;
+  const n8nStatus = getN8nStatus();
   const portalPath = `/ai-employees/portal/${customer.portal_token}`;
   const setupPercent = customer.total_setup_tasks
     ? Math.round((customer.completed_setup_tasks / customer.total_setup_tasks) * 100)
@@ -159,6 +162,27 @@ export default async function AiEmployeeCustomerDetailPage({
               <div className="field full">
                 <button className="button" type="submit">Update status</button>
               </div>
+            </form>
+          </section>
+
+          <section className="card">
+            <div className="section-header">
+              <div>
+                <h2>Intake Delivery</h2>
+                <p className="muted">Trigger n8n to send or resend the private intake link.</p>
+              </div>
+              <span className={`setup-badge ${n8nStatus.intakeLink === "ready" ? "ready" : "needs-setup"}`}>
+                {n8nStatus.intakeLink === "ready" ? "n8n ready" : "webhook needed"}
+              </span>
+            </div>
+            <form action={sendCustomerIntakeLinkAction.bind(null, customer.id)} className="setup-note">
+              <strong>{portalPath}</strong>
+              <p>
+                n8n should email this private link to {customer.email ?? "the customer"} and create a GHL follow-up task.
+              </p>
+              <button className="button" disabled={n8nStatus.intakeLink !== "ready"} type="submit">
+                Send intake link with n8n
+              </button>
             </form>
           </section>
 

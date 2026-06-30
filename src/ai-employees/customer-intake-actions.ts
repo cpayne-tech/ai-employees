@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { saveCustomerIntakeByPortalToken } from "@/ai-employees/data/repository";
+import { sendCustomerIntakeToN8n } from "@/ai-employees/integrations/n8n/client";
 
 const intakeSchema = z.object({
   business_name: z.string().min(1),
@@ -36,7 +37,7 @@ export async function submitCustomerIntakeAction(
     .map((field) => field.trim())
     .filter(Boolean);
 
-  await saveCustomerIntakeByPortalToken(portalToken, {
+  const intake = await saveCustomerIntakeByPortalToken(portalToken, {
     ...parsed,
     email: parsed.email.toLowerCase(),
     phone: parsed.phone || null,
@@ -54,6 +55,16 @@ export async function submitCustomerIntakeAction(
     disqualifying_rules: parsed.disqualifying_rules || null,
     ghl_notes: parsed.ghl_notes || null
   });
+
+  try {
+    await sendCustomerIntakeToN8n({
+      event: "ai_employee.customer_intake_submitted",
+      intake,
+      portalPath: `/ai-employees/portal/${portalToken}`
+    });
+  } catch (error) {
+    console.error("n8n intake notification failed", error);
+  }
 
   revalidatePath(`/ai-employees/portal/${portalToken}`);
   revalidatePath(`/ai-employees/portal/${portalToken}/intake`);

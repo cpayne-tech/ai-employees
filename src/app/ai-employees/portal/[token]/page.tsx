@@ -65,7 +65,7 @@ export default async function AiEmployeeCustomerPortalPage({
       </section>
 
       <section className="setup-progress-tracker" aria-label="Setup progress tracker">
-        {["Payment", "Intake", "AI roles", "GHL mapping", "Launch review"].map((step, index) => (
+        {["Payment", "Intake", "AI roles", "Workflow map", "Launch review"].map((step, index) => (
           <div className={progressStepClass(index, setupPercent, Boolean(intake))} key={step}>
             <span>{index + 1}</span>
             <strong>{step}</strong>
@@ -108,7 +108,7 @@ export default async function AiEmployeeCustomerPortalPage({
           <ShieldCheck size={22} />
           <span>Human review</span>
           <strong>OBMC setup team</strong>
-          <p>After intake, OBMC drafts roles, maps GHL, and moves setup tasks forward.</p>
+          <p>After intake, OBMC drafts roles, maps n8n and GHL handoffs, and moves setup tasks forward.</p>
         </div>
         <div className="client-portal-card action-card">
           <CalendarCheck size={22} />

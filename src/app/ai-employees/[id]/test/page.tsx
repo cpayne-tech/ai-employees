@@ -44,7 +44,7 @@ export default async function TestAiEmployeePage({
 
       {!provider.configured ? (
         <div className="setup-note">
-          Built-in testing is active. This build works without an OpenAI key; add the optional AI testing upgrade later only if you want richer test conversations.
+          No-LLM testing is active. This build uses structured workflow checks and does not require an OpenAI key.
         </div>
       ) : null}
 

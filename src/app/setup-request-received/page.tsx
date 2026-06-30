@@ -16,12 +16,12 @@ const nextSteps = [
   {
     icon: CheckCircle2,
     title: "Request saved",
-    text: "Your setup request was added to the OBMC admin queue."
+    text: "Your setup request was saved in the OBMC admin queue and can be routed through n8n."
   },
   {
     icon: MailCheck,
     title: "OBMC reviews it",
-    text: "The team reviews your package interest, timeline, and first workflow priority."
+    text: "The team reviews your package interest, timeline, GoHighLevel status, and first workflow priority."
   },
   {
     icon: ClipboardList,
@@ -44,7 +44,7 @@ export default function SetupRequestReceivedPage() {
           <h1>Your setup request is in the OBMC queue.</h1>
           <p>
             Thanks for requesting AI Employee setup. OBMC has the basics needed
-            to review your request and prepare the next intake step.
+            to review your request, create the workflow handoff, and prepare the next intake step.
           </p>
           <div className="funnel-hero-actions">
             <Link className="button" href="/pricing">

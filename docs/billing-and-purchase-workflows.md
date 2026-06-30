@@ -5,7 +5,7 @@ This document captures the current owner-first billing plan for the OBMC AI Empl
 ## Current Build Decision
 
 - The app must work without `OPENAI_API_KEY`.
-- OpenAI/LLM simulation is optional and belongs to a future upgrade path.
+- n8n is the current automation layer for setup, intake, purchase, and handoff workflows.
 - Lead generation and external lead discovery are under development and are not part of the current build.
 - The current build focuses on customer onboarding, five AI employee setup, GoHighLevel mapping, manual production-safe sync, and customer-facing workspace visibility.
 
@@ -56,19 +56,22 @@ A bundled one-click checkout can be added later with custom Stripe checkout or a
 1. Customer selects package and pays.
 2. Customer completes business intake.
 3. OBMC creates the five AI employees through onboarding.
-4. OBMC runs local simulation and adjusts prompts, FAQs, lead fields, appointment rules, and escalation rules.
+4. OBMC runs no-LLM workflow tests and adjusts FAQs, lead fields, appointment rules, handoff rules, and escalation rules.
 5. OBMC maps the AI employees to existing GoHighLevel calendars, pipeline stages, tags, and custom fields.
 6. OBMC generates GoHighLevel profile/export packages.
 7. OBMC activates production-safe manual sync and only adds workflows after review.
 8. Customer sees the client workspace for AI employee status, leads, appointment requests, and launch progress.
 
-## Future Stripe/n8n Connections
+## Stripe/n8n Connections
 
-Add these env vars when payment automation becomes part of the build:
+Add or verify these env vars for payment and setup automation:
 
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+- `N8N_SETUP_REQUEST_WEBHOOK_URL`
+- `N8N_INTAKE_LINK_WEBHOOK_URL`
+- `N8N_INTAKE_SUBMITTED_WEBHOOK_URL`
 - `N8N_PURCHASE_WEBHOOK_URL`
 
 Local workflow template:
@@ -89,7 +92,7 @@ Suggested checkout event flow:
 2. Verify webhook signature server-side.
 3. Create or update the customer workspace.
 4. Store plan, subscription, and customer IDs.
-5. Notify n8n purchase workflow, if configured.
+5. Notify the n8n purchase workflow.
 6. Start the onboarding checklist.
 
 Stripe webhook endpoint:

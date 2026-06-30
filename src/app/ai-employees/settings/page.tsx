@@ -1,5 +1,4 @@
 import { requireAiEmployeesAccess } from "@/ai-employees/auth";
-import { getAiProviderStatus } from "@/ai-employees/ai";
 import { AppFrame } from "@/ai-employees/components/app-frame";
 import { getLatestGhlDiscoveryReport } from "@/ai-employees/data/ghl-discovery";
 import { listGhlAiAgentProfiles } from "@/ai-employees/data/ghl-profiles";
@@ -11,7 +10,6 @@ type BadgeState = "ready" | "needs-setup" | "not-connected" | "optional" | "unde
 
 export default async function AiEmployeesSettingsPage() {
   await requireAiEmployeesAccess();
-  const aiProvider = getAiProviderStatus();
   const supabaseConnected = Boolean(getSupabaseAdminClient());
   const ownerExists = Boolean(process.env.AI_EMPLOYEES_OWNER_ID);
   const ghlApiKeyConfigured = Boolean(process.env.GHL_API_KEY || process.env.GOHIGHLEVEL_API_KEY);
@@ -42,11 +40,11 @@ export default async function AiEmployeesSettingsPage() {
           <div className="health-grid">
             <HealthCard label="Owner ID" ready={ownerExists} />
             <HealthCard label="Supabase" ready={supabaseConnected} />
-            <HealthCard label="Built-in testing" ready />
+            <HealthCard label="No-LLM test mode" ready />
             <HealthCard
-              label="Optional AI testing"
-              ready={aiProvider.configured}
-              stateWhenNotReady="optional"
+              label="n8n Automation"
+              ready={n8nStatus.setupRequest === "ready" && n8nStatus.intakeLink === "ready" && n8nStatus.intakeSubmitted === "ready"}
+              stateWhenNotReady="needs-setup"
             />
             <HealthCard
               label="GoHighLevel"
@@ -71,13 +69,15 @@ export default async function AiEmployeesSettingsPage() {
               <ChecklistItem ready={ownerExists} text="AI employee owner configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_ADMIN_PASSWORD)} text="Admin password configured" />
               <ChecklistItem ready={Boolean(process.env.AI_EMPLOYEES_SESSION_SECRET)} text="Session secret configured" />
-              <ChecklistItem ready text="Built-in test engine works without OpenAI" />
-              <ChecklistItem ready={aiProvider.configured} state={aiProvider.configured ? "ready" : "optional"} text="Optional AI testing key configured" />
+              <ChecklistItem ready text="No LLM key required for the current build" />
               <ChecklistItem ready={ghlApiKeyConfigured} text="GoHighLevel API key configured" />
               <ChecklistItem ready={ghlLocationConfigured} text="GoHighLevel location ID configured" />
               <ChecklistItem ready={discoveryComplete} text="GoHighLevel read-only discovery completed" />
+              <ChecklistItem ready={n8nStatus.setupRequest === "ready"} text="n8n setup-request webhook configured" />
+              <ChecklistItem ready={n8nStatus.intakeLink === "ready"} text="n8n intake-link webhook configured" />
+              <ChecklistItem ready={n8nStatus.intakeSubmitted === "ready"} text="n8n intake-submitted webhook configured" />
               <ChecklistItem ready={n8nStatus.leadSync === "ready"} text="n8n lead-sync webhook configured" />
-              <ChecklistItem ready={n8nStatus.purchaseWebhook === "ready"} state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} text="n8n purchase webhook configured" />
+              <ChecklistItem ready={n8nStatus.purchaseWebhook === "ready"} text="n8n purchase webhook configured" />
               <ChecklistItem ready={false} state="under-development" text="Lead generation and discovery agent" />
             </ul>
           </section>
@@ -91,8 +91,7 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <div className="record-list">
-                <IntegrationRow label="Built-in test engine" state="ready" />
-                <IntegrationRow label="Optional AI testing upgrade" state={aiProvider.configured ? "ready" : "optional"} />
+                <IntegrationRow label="No-LLM workflow testing" state="ready" />
                 <IntegrationRow
                   label={`GoHighLevel (${ghlStatus.replaceAll("_", " ")})`}
                   state={ghlStatus === "ready_for_test" ? "ready" : ghlStatus === "credentials_present" ? "needs-setup" : "not-connected"}
@@ -100,8 +99,11 @@ export default async function AiEmployeesSettingsPage() {
                 <IntegrationRow label={`GHL Discovery (${discovery?.status?.replaceAll("_", " ") ?? "not started"})`} state={discoveryComplete ? "ready" : "needs-setup"} />
                 <IntegrationRow label="Calendar inventory" state={discoveryComplete ? "ready" : "not-connected"} />
                 <IntegrationRow label="SMS/email inventory" state={discoveryComplete ? "ready" : "not-connected"} />
+                <IntegrationRow label={`n8n setup request (${n8nStatus.setupRequest.replaceAll("_", " ")})`} state={n8nStatus.setupRequest === "ready" ? "ready" : "needs-setup"} />
+                <IntegrationRow label={`n8n intake link (${n8nStatus.intakeLink.replaceAll("_", " ")})`} state={n8nStatus.intakeLink === "ready" ? "ready" : "needs-setup"} />
+                <IntegrationRow label={`n8n intake submitted (${n8nStatus.intakeSubmitted.replaceAll("_", " ")})`} state={n8nStatus.intakeSubmitted === "ready" ? "ready" : "needs-setup"} />
                 <IntegrationRow label={`n8n lead sync (${n8nStatus.leadSync.replaceAll("_", " ")})`} state={n8nStatus.leadSync === "ready" ? "ready" : "not-connected"} />
-                <IntegrationRow label={`n8n purchase webhook (${n8nStatus.purchaseWebhook.replaceAll("_", " ")})`} state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} />
+                <IntegrationRow label={`n8n purchase webhook (${n8nStatus.purchaseWebhook.replaceAll("_", " ")})`} state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "needs-setup"} />
                 <IntegrationRow label="Lead discovery and scraping" state="under-development" />
               </div>
             </section>
@@ -114,8 +116,8 @@ export default async function AiEmployeesSettingsPage() {
                 </div>
               </div>
               <ol className="next-steps">
-                <li>Finish the customer-facing workspace preview</li>
-                <li>Confirm pricing and purchase activation workflow</li>
+                <li>Configure n8n setup-request, intake-link, intake-submitted, and purchase webhooks</li>
+                <li>Use setup requests to create or update GHL contacts and opportunities</li>
                 <li>Create the five AI employees through onboarding</li>
                 <li>Map the five AI employees to existing GHL calendars and pipeline stages</li>
                 <li>Use manual lead sync from the lead detail page for production-safe CRM writes</li>
@@ -128,7 +130,7 @@ export default async function AiEmployeesSettingsPage() {
           <div className="section-header">
             <div>
               <h2>Integration Hub</h2>
-              <p className="muted">GoHighLevel is the execution layer. This app is the control center.</p>
+              <p className="muted">n8n is the automation layer, GoHighLevel is the execution layer, and this app is the control center.</p>
             </div>
           </div>
           <div className="integration-card-grid">
@@ -139,10 +141,13 @@ export default async function AiEmployeesSettingsPage() {
             <IntegrationCard title="GoHighLevel Workflows" text="Workflow triggers are documented in each profile; existing workflows remain untouched." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
             <IntegrationCard title="GoHighLevel Calendar" text="All five employees are mapped to reusable OBMC calendars." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
             <IntegrationCard title="GoHighLevel Pipelines" text="All five employees are mapped to reusable Agentic Development pipeline stages." state={fiveAgentsMapped ? "ready" : "needs-setup"} />
+            <IntegrationCard title="n8n Setup Request Workflow" text="Receives public setup requests so n8n can notify OBMC, create or update GHL contacts, and start follow-up tasks." state={n8nStatus.setupRequest === "ready" ? "ready" : "needs-setup"} />
+            <IntegrationCard title="n8n Intake Link Workflow" text="Lets OBMC send or resend a customer's private intake link from the admin customer record." state={n8nStatus.intakeLink === "ready" ? "ready" : "needs-setup"} />
+            <IntegrationCard title="n8n Intake Submitted Workflow" text="Receives completed customer intake so n8n can update GHL, notify OBMC, and prepare the implementation queue." state={n8nStatus.intakeSubmitted === "ready" ? "ready" : "needs-setup"} />
             <IntegrationCard title="n8n Lead Sync Orchestration" text="Receives AI Employee lead-synced events after successful GoHighLevel sync when the webhook is configured." state={n8nStatus.leadSync === "ready" ? "ready" : "not-connected"} />
-            <IntegrationCard title="n8n Purchase Orchestration" text="Optional downstream notification after Stripe purchase records are safely stored in the app." state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "optional"} />
+            <IntegrationCard title="n8n Purchase Orchestration" text="Receives post-purchase events after Stripe purchase records are safely stored in the app." state={n8nStatus.purchaseWebhook === "ready" ? "ready" : "needs-setup"} />
             <IntegrationCard title="Lead Generation" text="Future module for compliant discovery. It is not part of the current build." state="under-development" />
-            <IntegrationCard title="Optional AI Testing Upgrade" text="Optional richer test conversations. The current build works with the built-in test engine." state={aiProvider.configured ? "ready" : "optional"} />
+            <IntegrationCard title="No-LLM Current Build" text="The current production path uses forms, Supabase, GoHighLevel, Stripe, and n8n workflows without requiring an OpenAI key." state="ready" />
           </div>
         </section>
       </div>
