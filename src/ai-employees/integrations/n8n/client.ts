@@ -17,6 +17,19 @@ export type N8nConnectionStatus = {
   purchaseWebhook: "not_connected" | "ready";
 };
 
+function getPublicBaseUrl() {
+  return (
+    process.env.NEXT_PUBLIC_AI_EMPLOYEES_BASE_URL ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    "https://ai-employees-gamma.vercel.app"
+  ).replace(/\/$/, "");
+}
+
+function getGhlLocationId() {
+  return process.env.GHL_LOCATION_ID || process.env.GOHIGHLEVEL_LOCATION_ID || null;
+}
+
 export type N8nAiEmployeeEvent = {
   event: "ai_employee.lead_synced";
   employee: AiEmployee;
@@ -109,7 +122,9 @@ async function sendN8nWebhook(
     body: JSON.stringify({
       ...payload,
       sent_at: new Date().toISOString(),
-      source_app: "OBMC AI Employees"
+      source_app: "OBMC AI Employees",
+      public_base_url: getPublicBaseUrl(),
+      ghl_location_id: getGhlLocationId()
     }),
     cache: "no-store"
   });
