@@ -88,7 +88,8 @@ async function notifyPurchaseWorkflow(
   const response = await fetch(webhookUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...getN8nAuthHeader()
     },
     body: JSON.stringify({
       event: "ai_employee.stripe_purchase_event",
@@ -110,6 +111,12 @@ async function notifyPurchaseWorkflow(
   if (!response.ok) {
     throw new Error(`n8n purchase webhook returned ${response.status}`);
   }
+}
+
+function getN8nAuthHeader(): Record<string, string> {
+  return process.env.N8N_WEBHOOK_SECRET
+    ? { Authorization: `Bearer ${process.env.N8N_WEBHOOK_SECRET}` }
+    : {};
 }
 
 function summarizeStripeObject(object: Stripe.Event.Data.Object) {
