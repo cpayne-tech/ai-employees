@@ -27,11 +27,10 @@ Runtime sync:
 See `docs/ai-employees-ghl-production-map.md` for the current five-agent GHL
 resource map and workflow recipes.
 
-n8n is not required for the current AI Employees app. Keep it optional for
-advanced cross-app orchestration, external handoffs, or long-running workflows
-that are awkward to run inside the Next.js app or native GoHighLevel workflows.
-When `N8N_WEBHOOK_URL` is configured, successful manual GHL lead syncs also
-send an `ai_employee.lead_synced` event to n8n. n8n failures are logged without
+n8n is the automation layer for setup requests, intake delivery, intake
+submission handoffs, purchase handoffs, and downstream lead-sync notifications.
+When `N8N_WEBHOOK_URL` is configured, successful manual GHL lead syncs also send
+an `ai_employee.lead_synced` event to n8n. n8n failures are logged without
 marking the completed GHL sync as failed.
 
 Current status values:

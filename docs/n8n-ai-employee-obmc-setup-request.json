@@ -1,0 +1,91 @@
+{
+  "name": "Ai Employee OBMC - Setup Request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-employee-obmc-setup-request-replace-with-private-uuid-before-activation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-setup-request",
+      "name": "Setup Request Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        0
+      ],
+      "webhookId": "ai-employee-obmc-setup-request-template"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json.body ?? $input.first().json;\nconst customer = payload.customer ?? {};\nconst request = payload.request ?? {};\nconst tags = [\n  'OBMC AI Employees',\n  'Setup Request',\n  customer.plan_id ? `Plan: ${customer.plan_id}` : null,\n  request.currentGhl ? `GHL: ${request.currentGhl}` : null\n].filter(Boolean);\n\nreturn [{\n  json: {\n    event: payload.event ?? 'ai_employee.setup_request_created',\n    source_app: payload.source_app ?? 'OBMC AI Employees',\n    received_at: new Date().toISOString(),\n    portal_path: payload.portal_path ?? (customer.portal_token ? `/ai-employees/portal/${customer.portal_token}` : null),\n    customer,\n    request,\n    ghl_contact_payload: {\n      locationId: $env.GHL_LOCATION_ID,\n      firstName: customer.contact_name ?? customer.business_name ?? 'AI Employee Lead',\n      name: customer.contact_name ?? customer.business_name ?? 'AI Employee Lead',\n      email: customer.email ?? null,\n      phone: customer.phone ?? null,\n      website: customer.website ?? null,\n      tags,\n      source: 'OBMC AI Employees setup request',\n      customFields: [\n        { key: 'obmc_ai_plan', field_value: customer.plan_id ?? 'manual' },\n        { key: 'obmc_ai_timeline', field_value: request.timeline ?? 'not provided' },\n        { key: 'obmc_ai_primary_need', field_value: request.primaryNeed ?? 'not provided' }\n      ]\n    },\n    ghl_opportunity_payload: {\n      locationId: $env.GHL_LOCATION_ID,\n      title: `${customer.business_name ?? customer.contact_name ?? 'New'} - AI Employee Setup`,\n      status: 'open',\n      source: 'OBMC AI Employees',\n      notes: [\n        `Plan: ${customer.plan_name ?? customer.plan_id ?? 'manual review'}`,\n        `Timeline: ${request.timeline ?? 'not provided'}`,\n        `Uses GHL: ${request.currentGhl ?? 'not sure'}`,\n        `Primary need: ${request.primaryNeed ?? 'not provided'}`,\n        request.notes ? `Notes: ${request.notes}` : null,\n        customer.portal_token ? `Portal: /ai-employees/portal/${customer.portal_token}` : null\n      ].filter(Boolean).join('\\n')\n    },\n    obmc_task: {\n      title: 'Review AI Employee setup request',\n      owner: 'OBMC Admin',\n      due: 'same business day',\n      portal_path: customer.portal_token ? `/ai-employees/portal/${customer.portal_token}` : null,\n      summary: `${customer.business_name ?? customer.contact_name ?? 'New request'} wants ${request.primaryNeed ?? 'AI Employee setup'}`\n    },\n    next_step: 'create_or_update_ghl_contact_then_send_intake_link'\n  }\n}];"
+      },
+      "id": "code-normalize-setup-request",
+      "name": "Normalize Setup Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, workflow: 'Ai Employee OBMC - Setup Request', next_step: $json.next_step, customer_email: $json.customer.email, portal_path: $json.portal_path } }}",
+        "options": {}
+      },
+      "id": "respond-setup-request",
+      "name": "Confirm Setup Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Setup Request Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Setup Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Setup Request": {
+      "main": [
+        [
+          {
+            "node": "Confirm Setup Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "ai-employee-obmc-setup-request-local-template",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "name": "OBMC AI Employees"
+    },
+    {
+      "name": "Setup Request"
+    }
+  ]
+}

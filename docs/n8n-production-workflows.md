@@ -2,6 +2,20 @@
 
 The current build does not require an LLM provider. The app stores records in Supabase, shows the admin/customer portals, and sends structured events to n8n. n8n is the automation layer that should update GoHighLevel, notify OBMC, and move operational work forward.
 
+Project URL: `https://obmc.app.n8n.cloud/projects/CyrqC4yeTLDeW2U2/workflows`
+
+## Import files
+
+Import these workflows into the `Ai Employee OBMC` n8n project:
+
+- `docs/n8n-ai-employee-obmc-setup-request.json`
+- `docs/n8n-ai-employee-obmc-intake-link.json`
+- `docs/n8n-ai-employee-obmc-intake-submitted.json`
+- `docs/n8n-ai-employee-obmc-purchase-activation.json`
+- `docs/n8n-ai-employee-obmc-workflow.json`
+
+Leave `docs/n8n-ai-employee-obmc-lead-discovery-agent.json` inactive. Lead discovery is a future module.
+
 ## Required environment variables
 
 - `N8N_WEBHOOK_SECRET`: optional shared bearer token sent to n8n as `Authorization: Bearer <secret>`.
@@ -10,6 +24,8 @@ The current build does not require an LLM provider. The app stores records in Su
 - `N8N_INTAKE_SUBMITTED_WEBHOOK_URL`: receives customer intake submissions from the private portal.
 - `N8N_PURCHASE_WEBHOOK_URL`: receives Stripe purchase events after the app stores the purchase record.
 - `N8N_WEBHOOK_URL`: receives manual lead-sync events after a lead is synced to GoHighLevel.
+
+After importing each workflow, replace the placeholder webhook path with a private UUID-style path, activate the workflow, copy the production webhook URL, and paste it into the matching Vercel environment variable.
 
 ## Workflow 1: Setup Request Created
 

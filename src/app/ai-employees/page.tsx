@@ -47,7 +47,7 @@ export default async function AiEmployeesDashboardPage() {
     },
     {
       label: "n8n workflows",
-      ready: n8nStatus.setupRequest === "ready" && n8nStatus.intakeSubmitted === "ready",
+      ready: n8nStatus.setupRequest === "ready" && n8nStatus.intakeLink === "ready" && n8nStatus.intakeSubmitted === "ready",
       detail: `${[
         n8nStatus.setupRequest === "ready" ? "setup" : null,
         n8nStatus.intakeLink === "ready" ? "intake link" : null,
