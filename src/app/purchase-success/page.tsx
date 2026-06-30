@@ -45,7 +45,7 @@ export default function PurchaseSuccessPage() {
           </p>
           <div className="funnel-hero-actions">
             <Link className="button" href="/contact">
-              Request Intake Link
+              Request or Confirm Intake Link
               <ArrowRight size={16} />
             </Link>
             <Link className="button secondary" href="/pricing">Back to Packages</Link>
@@ -56,7 +56,8 @@ export default function PurchaseSuccessPage() {
           <strong>What happens now?</strong>
           <p>
             If your portal link was not sent automatically, OBMC can create or resend
-            it from the admin customer screen.
+            it from the admin customer screen. The setup request form also creates
+            the admin-visible record OBMC needs for follow-up.
           </p>
         </div>
       </section>

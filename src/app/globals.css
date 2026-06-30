@@ -3347,19 +3347,80 @@ textarea {
 }
 
 .ghl-form-placeholder {
-  align-content: center;
   background: #f8fafc;
-  border: 1px dashed #cfd8e3;
+  border: 1px solid #cfd8e3;
   border-radius: 8px;
   display: grid;
-  gap: 10px;
+  gap: 18px;
   justify-items: start;
-  min-height: 430px;
+  min-height: 0;
   padding: 26px;
 }
 
 .ghl-form-placeholder svg {
   color: var(--ok);
+}
+
+.setup-request-form-heading {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.setup-request-form-heading strong {
+  color: var(--ink);
+  display: block;
+  font-size: 24px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.setup-request-form-heading p {
+  color: #475467;
+  margin: 0;
+}
+
+.setup-request-form {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.setup-request-form .field.full,
+.setup-request-submit-row {
+  grid-column: 1 / -1;
+}
+
+.setup-request-form textarea {
+  min-height: 118px;
+}
+
+.hidden-honeypot {
+  height: 0;
+  left: -9999px;
+  opacity: 0;
+  position: absolute;
+  width: 0;
+}
+
+.setup-request-submit-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.setup-request-submit-row span {
+  align-items: center;
+  color: #475467;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 7px;
 }
 
 .placeholder-action-row {
@@ -3796,6 +3857,17 @@ textarea {
 
   .placeholder-action-row {
     display: grid;
+  }
+
+  .setup-request-form,
+  .setup-request-form-heading,
+  .setup-request-submit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-request-submit-row .button {
+    justify-content: center;
+    width: 100%;
   }
 
   .funnel-section.dark {

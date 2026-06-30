@@ -8,6 +8,7 @@ import type {
   AiEmployeeCustomerDetail,
   AiEmployeeCustomerIntake,
   AiEmployeeCustomerIntakeInput,
+  AiEmployeeCustomerLifecycleStatus,
   AiEmployeeCustomerOnboardingStatus,
   AiEmployeeCustomerPurchase,
   AiEmployeeCustomerSetupTask,
@@ -1559,22 +1560,68 @@ export async function createManualCustomer(input: ManualCustomerInput) {
   const supabase = getSupabaseAdminClient();
   const timestamp = now();
   const email = input.email.trim().toLowerCase();
+  const nextCustomer: {
+    business_name: string | null;
+    contact_name: string | null;
+    email: string;
+    phone: string | null;
+    website: string | null;
+    plan_id: string;
+    plan_name: string | null;
+    lifecycle_status: AiEmployeeCustomerLifecycleStatus;
+    onboarding_status: AiEmployeeCustomerOnboardingStatus;
+    notes: string | null;
+  } = {
+    business_name: input.businessName?.trim() || null,
+    contact_name: input.contactName?.trim() || null,
+    email,
+    phone: input.phone?.trim() || null,
+    website: input.website?.trim() || null,
+    plan_id: input.planId,
+    plan_name: input.planName?.trim() || null,
+    lifecycle_status: "intake_needed",
+    onboarding_status: "intake_sent",
+    notes: input.notes?.trim() || null
+  };
 
   if (supabase) {
+    const { data: existing, error: existingError } = await supabase
+      .from("ai_employee_customers")
+      .select("*")
+      .eq("owner_id", ownerId())
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingError) {
+      throw new Error(existingError.message);
+    }
+
+    if (existing) {
+      const { data, error } = await supabase
+        .from("ai_employee_customers")
+        .update({
+          ...nextCustomer,
+          updated_at: timestamp
+        })
+        .eq("id", existing.id)
+        .eq("owner_id", ownerId())
+        .select("*")
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const customer = data as AiEmployeeCustomer;
+      await ensureCustomerSetupTasks(customer.id);
+      return customer;
+    }
+
     const { data, error } = await supabase
       .from("ai_employee_customers")
       .insert({
         owner_id: ownerId(),
-        business_name: input.businessName?.trim() || null,
-        contact_name: input.contactName?.trim() || null,
-        email,
-        phone: input.phone?.trim() || null,
-        website: input.website?.trim() || null,
-        plan_id: input.planId,
-        plan_name: input.planName?.trim() || null,
-        lifecycle_status: "intake_needed",
-        onboarding_status: "intake_sent",
-        notes: input.notes?.trim() || null
+        ...nextCustomer
       })
       .select("*")
       .single();
@@ -1589,25 +1636,34 @@ export async function createManualCustomer(input: ManualCustomerInput) {
   }
 
   const store = await readDevStore();
+  const existingCustomer = store.customers.find((item) => item.owner_id === ownerId() && item.email === email);
+
+  if (existingCustomer) {
+    existingCustomer.business_name = nextCustomer.business_name;
+    existingCustomer.contact_name = nextCustomer.contact_name;
+    existingCustomer.phone = nextCustomer.phone;
+    existingCustomer.website = nextCustomer.website;
+    existingCustomer.plan_id = nextCustomer.plan_id;
+    existingCustomer.plan_name = nextCustomer.plan_name;
+    existingCustomer.lifecycle_status = "intake_needed";
+    existingCustomer.onboarding_status = "intake_sent";
+    existingCustomer.notes = nextCustomer.notes;
+    existingCustomer.updated_at = timestamp;
+    await writeDevStore(store);
+    await ensureCustomerSetupTasks(existingCustomer.id);
+    return existingCustomer;
+  }
+
   const customer: AiEmployeeCustomer = {
     id: randomUUID(),
     owner_id: ownerId(),
-    business_name: input.businessName?.trim() || null,
-    contact_name: input.contactName?.trim() || null,
-    email,
-    phone: input.phone?.trim() || null,
-    website: input.website?.trim() || null,
-    plan_id: input.planId,
-    plan_name: input.planName?.trim() || null,
-    lifecycle_status: "intake_needed",
-    onboarding_status: "intake_sent",
+    ...nextCustomer,
     portal_token: randomUUID(),
     stripe_customer_id: null,
     stripe_subscription_id: null,
     stripe_latest_checkout_session_id: null,
     ghl_contact_id: null,
     ghl_opportunity_id: null,
-    notes: input.notes?.trim() || null,
     created_at: timestamp,
     updated_at: timestamp
   };

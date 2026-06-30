@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Bot, CheckCircle2, ClipboardList } from "lucide-react";
+import { billingPlans } from "@/ai-employees/billing";
+import { submitPublicSetupRequestAction } from "@/ai-employees/public-setup-actions";
 
 export const publicNavLinks = [
   { href: "/", label: "Home" },
@@ -109,28 +111,82 @@ export function GHLContactFormEmbed() {
   if (!embedUrl) {
     return (
       <div className="ghl-form-placeholder">
-        <ClipboardList size={24} />
-        <strong>Setup request form is being connected.</strong>
-        <p>
-          The GoHighLevel form URL has not been added yet. Until it is connected,
-          start from pricing or use this page to understand what information OBMC
-          needs for setup.
-        </p>
-        <div className="placeholder-action-row">
-          <Link className="button" href="/pricing">
-            View Packages
-            <ArrowRight size={16} />
-          </Link>
-          <Link className="button secondary" href="/purchase-success">See Next Step</Link>
+        <div className="setup-request-form-heading">
+          <ClipboardList size={24} />
+          <div>
+            <strong>Request AI Employee setup</strong>
+            <p>
+              Submit this form to create a setup request in the OBMC admin queue.
+              OBMC can then send your private intake link.
+            </p>
+          </div>
         </div>
-        <div className="placeholder-checklist">
-          {["Business services", "FAQs and lead fields", "Appointment rules", "Escalation contacts"].map((item) => (
-            <span key={item}>
+        <form action={submitPublicSetupRequestAction} className="setup-request-form">
+          <input aria-hidden="true" className="hidden-honeypot" name="companyUrl" tabIndex={-1} />
+          <label className="field">
+            Business name
+            <input name="businessName" placeholder="Your company" required />
+          </label>
+          <label className="field">
+            Your name
+            <input name="contactName" placeholder="Primary contact" required />
+          </label>
+          <label className="field">
+            Email
+            <input name="email" placeholder="you@example.com" required type="email" />
+          </label>
+          <label className="field">
+            Phone
+            <input name="phone" placeholder="Best callback number" />
+          </label>
+          <label className="field">
+            Website
+            <input name="website" placeholder="https://example.com" type="url" />
+          </label>
+          <label className="field">
+            Package
+            <select name="planId" defaultValue="growth">
+              {billingPlans.map((plan) => (
+                <option key={plan.id} value={plan.id}>{plan.name}</option>
+              ))}
+              <option value="manual">Not sure yet</option>
+            </select>
+          </label>
+          <label className="field">
+            Timeline
+            <select name="timeline" defaultValue="soon">
+              <option value="soon">As soon as possible</option>
+              <option value="this_month">This month</option>
+              <option value="exploring">Just exploring</option>
+            </select>
+          </label>
+          <label className="field">
+            Do you use GoHighLevel?
+            <select name="currentGhl" defaultValue="not_sure">
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+              <option value="not_sure">Not sure</option>
+            </select>
+          </label>
+          <label className="field full">
+            What should the AI employees help with first?
+            <textarea name="primaryNeed" placeholder="Lead capture, appointment requests, support questions, follow-up, or something else..." required />
+          </label>
+          <label className="field full">
+            Anything else OBMC should know?
+            <textarea name="notes" placeholder="Optional context, current tools, launch concerns, or best time to follow up." />
+          </label>
+          <div className="setup-request-submit-row">
+            <button className="button" type="submit">
+              Submit Setup Request
+              <ArrowRight size={16} />
+            </button>
+            <span>
               <CheckCircle2 size={15} />
-              {item}
+              Creates a private setup record for OBMC review.
             </span>
-          ))}
-        </div>
+          </div>
+        </form>
       </div>
     );
   }

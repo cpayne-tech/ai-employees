@@ -35,11 +35,11 @@ export default async function AiEmployeeCustomersPage() {
         </>
       }
       eyebrow="Customer operations"
-      subtitle="Post-purchase customers, Stripe events, and setup tasks for the managed AI Employee install."
+      subtitle="Public setup requests, post-purchase customers, Stripe events, and setup tasks for the managed AI Employee install."
       title="Customers"
     >
       <section className="grid stats-grid" aria-label="Customer setup totals">
-        <StatCard detail="Created from paid events or manual review" label="Customers" value={customers.length} />
+        <StatCard detail="Created from setup requests, paid events, or manual review" label="Customers" value={customers.length} />
         <StatCard detail="Currently in setup or live" label="Active Setup" value={activeCustomers.length} />
         <StatCard detail="Remaining onboarding work" label="Open Tasks" value={setupTasks} />
         <StatCard detail="Paid purchase events recorded" label="Paid Events" value={revenueCents} />
@@ -49,7 +49,7 @@ export default async function AiEmployeeCustomersPage() {
         <div className="section-header">
           <div>
             <h2>Customer Queue</h2>
-            <p className="muted">New Stripe purchases appear here first, then move through intake, setup, review, and launch.</p>
+            <p className="muted">New setup requests and Stripe purchases appear here first, then move through intake, setup, review, and launch.</p>
           </div>
           <UsersRound size={22} />
         </div>
@@ -78,7 +78,7 @@ export default async function AiEmployeeCustomersPage() {
           </div>
         ) : (
           <EmptyState
-            description="No customer purchases have been recorded yet. GHL setup links and Stripe webhooks are ready to create customers when a purchase event arrives."
+            description="No setup requests or purchases have been recorded yet. The public request form, GHL setup links, and Stripe webhooks can create customers when a buyer raises their hand."
             title="No customers yet"
           />
         )}
@@ -88,15 +88,15 @@ export default async function AiEmployeeCustomersPage() {
         <div className="section-header">
           <div>
             <h2>Purchase Capture Path</h2>
-            <p className="muted">How a buyer becomes a managed setup record.</p>
+            <p className="muted">How a buyer or public request becomes a managed setup record.</p>
           </div>
           <ReceiptText size={22} />
         </div>
         <div className="workflow-timeline">
           {[
             "Customer pays the GHL/Stripe setup link.",
-            "Stripe sends a signed event to the webhook.",
-            "The app creates or updates the customer record.",
+            "Or the buyer submits the public setup request form.",
+            "Stripe or the form creates or updates the customer record.",
             "Default setup tasks are created for the OBMC admin team.",
             "n8n is notified when a purchase webhook URL is configured."
           ].map((item, index) => (
